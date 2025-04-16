@@ -2,11 +2,16 @@
 
 - [문제 링크](https://www.acmicpc.net/problem/15861)
 
-## 문제 설명
+## 문제 설명 Problem Description
 간선에 가중치와 방향성이 없는 양방향 그래프로 트리 정점의수, 루트의 번호, 쿼리의 수가 주어진 후 각 간선 정보가 입력된다.
 쿼리의 수 만큼 정점 U가 입력되는데 U를 루트로 하는 서브트리에 속한 정점의 수를 출력하면 된다.
 
-## 생각 과정
+The input consists of a tree represented as an undirected and unweighted graph. It includes the number of nodes,
+the root node, the number of queries, and a list of edges.
+For each query, a node U is given, and the program should output the number of nodes in the subtree rooted at U.
+
+
+## 생각 과정 Thought Process
 1. **트리 변환**
 가중치가 없는 양방향 그래프가 주어지므로 일단 양방향 그래프로 딕셔너리에 저장 후 주어진 루트의 번호부터 BFS 탐색을 통해 방문 했을때
 visited[children] == True 이면 간선을 끊는 방법을 사용해야겠다고 생각해서 구현했다.
@@ -20,7 +25,17 @@ visited[children] == True 이면 간선을 끊는 방법을 사용해야겠다�
 누적합이 진행 되지 않도록 위상정렬을 해야하므로 자식의 개수를 담은 count 리스트를 만들고 
 자식이 처리 될때마다 -1 씩 하는 방법으로 count가 0이되면 모든 자식이 처리됐다고 생각하고 키값을 current 큐에 넣어 순서대로 처리하도록 했다.(마지막 루트 쿼리 값은 따로처리했다)
 
-##코드 설명
+1. **Tree transformation**
+The undirected graph was converted into a tree using BFS traversal.
+
+2. **sub tree calculation**
+The first approach I considered had a worst-case time complexity of O(N²), which caused some trouble.
+So instead, I used a count list to store the number of child nodes and performed a topological sort.
+Each time a child node was processed, I decreased the count by 1, and when the count reached 0, I added the node to the current queue.
+Then I used popleft() to calculate the accumulated sum step by step.
+
+
+##코드 설명 Code
 
 ```python
 from collections import deque
@@ -84,7 +99,7 @@ for i in range(Query):
   x = int(input())
   print(query[x])
 
-## 예시 입력
+## 예시 입력 Sample Input
 10 5 3
 1 3
 4 3
@@ -99,11 +114,15 @@ for i in range(Query):
 5
 4
 
-## 예시 출력
+## 예시 출력 Sample Output
 1
 10
 5
 
-## 마무리
+## 마무리 Conclusion or Reflection
 전체적으로 가벼운 느낌의 문제였다. 서브트리 계산에서 차질이 조금 있었지만 다른 방법을 고안해 내는게 그렇게 오래걸리지 않았다. 
-트리의 성질을 더욱 이해하고 더 어려운 위상정렬을 사용할 발판을 마련한 문제였다.
+트리의 성질을 더욱 이해하고 다른 위상정렬을 활용할 발판을 마련한 문제였다.
+
+Overall, it was a relatively light problem.
+Although I had some trouble with calculating the subtree sizes at first, it didn’t take too long to come up with an alternative approach.
+This problem helped me deepen my understanding of tree structures and laid a good foundation for applying topological sorting in other problems.

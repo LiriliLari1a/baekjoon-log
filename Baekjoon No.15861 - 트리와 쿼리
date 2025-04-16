@@ -1,0 +1,105 @@
+# Baekjoon No.15861 - 트리와 쿼리
+
+- [문제 링크](https://www.acmicpc.net/problem/15861)
+
+## 문제 설명
+간선에 가중치와 방향성이 없는 양방향 그래프로 트리 정점의수, 루트의 번호, 쿼리의 수가 주어진 후 각 간선 정보가 입력된다.
+쿼리의 수 만큼 정점 U가 입력되는데 U를 루트로 하는 서브트리에 속한 정점의 수를 출력하면 된다.
+
+## 생각 과정
+1. **트리 변환**
+가중치가 없는 양방향 그래프가 주어지므로 일단 양방향 그래프로 딕셔너리에 저장 후 주어진 루트의 번호부터 BFS 탐색을 통해 방문 했을때 visited[children] == True 이면 간선을 끊는 방법을 사용해야겠다고 생각해서 구현했다.
+2. **서브트리 계산**
+쿼리의 수를 저장하는 리스트를 만들려고 했는데 이부분에서 조금 헤맸다.
+처음에는 reversed_Tree를 구한 후에 Tree 딕셔너리에서 자식 노드가 없는 즉, 해당 키값이 비어있는 키를 반환 한후 부모노드를 타고 올라가면서 1씩 더하고 각 첫 부모노드를 반환해서 더하는 것을 반복하면 되겠다 라고 생각했다.
+하지만 구현이 어려웠고 쿼리가 생각대로 작동하지 않을 수도 있겠다는 생각과 가장 큰 문제점은 심할경우 시간 복잡도가 O(N^2) 까지 늘어날 수도 있다는 점에서 다른 방법을 생각하게 되었다.
+그래서 누적해서 더해야 시간복잡도가 해결되리라 생각하고 누적해서 더하기 위해선 모든 자식노드가 처리되기 전 누적합이 진행 되지 않도록 위상정렬을 해야하므로 자식의 개수를 담은 count 리스트를 만들고 
+자식이 처리 될때마다 -1 씩 하는 방법으로 count가 0이되면 모든 자식이 처리됐다고 생각하고 키값을 current 큐에 넣어 순서대로 처리하도록 했다.(마지막 루트 쿼리 값은 따로처리했다)
+
+##코드 설명
+
+```python
+from collections import deque
+
+N, R, Query = map(int, input().split())
+Tree = { i : [] for i in range(1, N + 1) }
+query = [0] * (N + 1)
+
+root = [R]
+visited = [False] * (N + 1)
+visited[R] = True
+
+#양방향 그래프 입력
+for _ in range(N - 1):
+  U, V = map(int, input().split())
+  Tree[U].append(V)
+  Tree[V].append(U)
+
+#루트 R 부터 BFS로 트리 구조 만들기
+while root:
+  temp = []
+  for item in root:
+    for children in Tree[item][:]:
+      if visited[children]:
+        Tree[item].remove(children)
+      else:
+        visited[children] = True
+        temp.append(children)
+  root = temp[:]
+
+reversed_Tree = { i : 0 for i in range(1, N + 1) }
+
+# 반전트리 만들기
+for parent, children in Tree.items():
+  for child in children:
+    reversed_Tree[child] = parent
+
+# 위상정렬 위한 count 리스트 작성과 자식이 없는 노드 탐색
+current = deque([])
+count = [0] * (N + 1)
+for i in range(1, N + 1):
+  count[i] = len(Tree[i])
+  if not Tree[i]:
+    current.append(i)
+    query[i] = 1
+
+# count 리스트를 이용해서 누적합 계산
+while current:
+  item = current.popleft()
+  k = reversed_Tree[item]
+  query[k] += query[item]
+  count[k] -= 1
+  if count[k] == 0 and not k == R:
+    query[k] += 1
+    current.append(k)
+# 모든 자식 노드가 처리된 후 루트는 추가적으로 1 증가시켜야 하므로 따로 처리
+query[R] += 1
+
+#프린트
+for i in range(Query):
+  x = int(input())
+  print(query[x])
+
+## 예시 입력
+10 5 3
+1 3
+4 3
+5 4
+5 6
+6 7
+2 3
+9 6
+6 8
+10 4
+10
+5
+4
+
+## 예시 출력
+1
+10
+5
+
+## 마무리
+전체적으로 가벼운 느낌의 문제였다. 서브트리 계산에서 차질이 조금 있었지만 다른 방법을 고안해 내는게 그렇게 오래걸리지 않았다. 
+트리의 성질을 더욱 이해하고 더 어려운 위상정렬을 사용할 발판을 마련한 문제였다.

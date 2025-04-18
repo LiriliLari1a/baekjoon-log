@@ -1,0 +1,127 @@
+# Baekjoon No.1647 - 도시 분할 계획
+
+- [문제 링크](https://www.acmicpc.net/problem/1647)
+
+## 문제 설명 Problem Description
+마을의 이장은 마을을 두 개의 분리된 마을로 분할할 계획을 가지고 있다.
+마을을 분할할 때는 각 분리된 마을 안에 집들이 서로 연결되도록 분할해야 한다.
+각 분리된 마을 안에 있는 임의의 두 집 사이에 경로가 항상 존재해야 한다는 뜻이다. 마을에는 집이 하나 이상 있어야 한다.
+
+첫째 줄에 집의 개수 N, 길의 개수 M이 주어진다. N은 2이상 100,000이하인 정수이고, M은 1이상 1,000,000이하인 정수이다.
+그 다음 줄부터 M줄에 걸쳐 길의 정보가 A B C 세 개의 정수로 주어지는데 
+A번 집과 B번 집을 연결하는 길의 유지비가 C (1 ≤ C ≤ 1,000)라는 뜻이다.
+임의의 두 집 사이에 경로가 항상 존재하는 입력만 주어진다.
+
+첫째 줄에 없애고 남은 길 유지비의 합의 최솟값을 출력한다.
+
+The village chief plans to divide the village into two separate villages.
+When dividing the village, the houses within each separated village must remain connected.
+In other words, within each of the two new villages, there must always be a path between any two houses.
+Each village must contain at least one house.
+
+The first line of input contains two integers, N and M, representing the number of houses and the number of roads, respectively.
+N is an integer between 2 and 100,000, and M is an integer between 1 and 1,000,000.
+
+The next M lines each contain three integers A, B, and C,
+which indicate that there is a road between house A and house B with a maintenance cost of C (1 ≤ C ≤ 1,000).
+
+It is guaranteed that there is always a path between any two houses in the village.
+
+The output should be a single integer: the minimum total maintenance cost of the remaining roads after the division.
+
+## 생각 과정 Thought Process
+1. ** 유니온 - 파인드**
+문제가 No.1197 최소 스패닝 트리와 유사했다.
+최소 스패닝트리를 풀때는 모든 것을 손으로 구현해서 해결했으나 이번엔 유니온 - 파인드를 이용했다.
+크루스칼 알고리즘과 유니온 - 파인드 알고리즘은 처음 접해보는 거라 정보를 찾아보았다.
+최소 스패닝 트리를 구현할때 사용 했던 방법과 거의 유사해서 어렵지 않게 이해했다.
+
+간선의 개수가 많으므로 재귀의 깊이를 설정하고 부모노드를 자기자신으로 초기화한 parent 리스트를 작성 하는 것부터 시작했다.
+find(x) 함수는 재귀로 최상위 노드 x의 부모 노드를 찾아 반환한다.
+그리고 union(a, b) 함수는 a, b의 최상위 부모노드가 다르면 부모노드를 통일하여 서로를 같은 마을로 묶는다.
+
+이렇게 간선정보를 비용 오름차순으로 정리하고 가장 비용이 낮은 간선부터 순환구조가 생기지 않도록 최상위 부모노드를 확인 한 후 union()으로 서로 묶는다.
+서로 간선을 연결하고 total_cost 변수에 비용을 추가하면 최소 스패닝 트리가 완성되고 추가한 비용중 가장 높은 비용을 빼면 최소비용으로 구성된 두개의 트리 구조가 된다.
+
+The problem was similar to No.1197, Minimum Spanning Tree.
+When I previously solved a minimum spanning tree problem, I implemented everything manually, but this time I used the Union-Find algorithm.
+Since it was my first time encountering Kruskal’s algorithm and the Union-Find algorithm, I looked up some information about them.
+The approach turned out to be very similar to what I had used before when implementing a minimum spanning tree, so it wasn’t too difficult to understand.
+
+Because there were many edges, I first set the recursion limit and initialized a parent list where each node is its own parent.
+The find(x) function is a recursive function that returns the root parent of node x.
+The union(a, b) function unites two sets by making them share the same root parent if they currently belong to different sets, effectively grouping them into the same village.
+
+After sorting all edges in ascending order of cost, I traversed them starting from the lowest cost.
+For each edge, I checked the root parents to avoid creating cycles, and if they were in different sets, I used union() to merge them.
+Each time I connected two nodes, I added the edge’s cost to total_cost.
+Once the minimum spanning tree was constructed, 
+I removed the highest cost among the added edges, effectively dividing the village into two and achieving two connected components with the minimum possible maintenance cost.
+
+
+
+##코드 설명 Code
+
+```python
+# 길의 개수가 1**6 개 이하이므로 재귀 깊이 설정
+import sys
+sys.setrecursionlimit(10**6)
+
+edges = []
+
+N, M = map(int, input().split())
+for _ in range(M):
+  A, B, C = map(int, input().split())
+  edges.append((C, A, B))
+
+# 부모노드를 자기자신으로 초기화
+parent = [i for i in range(N + 1)]
+
+# 최상위 부모노드 찾기
+def find(x):
+  if parent[x] != x:
+    parent[x] = find(parent[x])
+  return parent[x]
+
+# 최상위 부모노드가 다르면 서로를 연결
+def union(a, b):
+  a = find(a)
+  b = find(b)
+  if a != b:
+    parent[b] = a
+
+# 간선 오름차순 정렬
+edges.sort()
+total_cost = 0
+max_edge = 0
+
+# 비용 낮은 간선부터 탐색
+for cost, a, b in edges:
+  if find(a) != find(b):
+    union(a, b)
+    total_cost += cost
+    max_edge = max(max_edge, cost)
+
+# 출력
+print(total_cost - max_edge)
+
+
+## 예시 입력 Sample Input
+5 5
+1 3 1
+2 3 2
+1 2 3
+2 4 10
+4 5 10
+
+## 예시 출력 Sample Output
+16
+
+## 마무리 Conclusion or Reflection
+어제 최소스패닝 트리를 구현해 내면서 머리 아팠던 것이 허무할 정도로 쉬운 알고리즘 이었다. 
+시간복잡도도 O(M log M)으로 어제 직접 구현한 방법보다 훨씬 빠르고 코드도 간결했다.
+앞으로 쉬우면서 강한 유니온 - 파인드 알고리즘을 도시 분할 등 최소 스패닝트리를 구현해야 할때 유용하게 사용할 것 같다.
+
+Implementing the Minimum Spanning Tree manually yesterday felt quite challenging, but discovering the Union-Find algorithm made it all seem surprisingly simple.
+With a time complexity of O(M log M), it’s not only significantly faster than the method I used before, but also much cleaner in terms of code.
+Going forward, I think the Union-Find algorithm, being both simple and powerful, will be very useful when implementing Minimum Spanning Trees in problems like city division and more.

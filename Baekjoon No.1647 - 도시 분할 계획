@@ -30,7 +30,7 @@ It is guaranteed that there is always a path between any two houses in the villa
 The output should be a single integer: the minimum total maintenance cost of the remaining roads after the division.
 
 ## 생각 과정 Thought Process
-1. ** 유니온 - 파인드**
+1. ** 유니온 - 파인드 **
 문제가 No.1197 최소 스패닝 트리와 유사했다.
 최소 스패닝트리를 풀때는 모든 것을 손으로 구현해서 해결했으나 이번엔 유니온 - 파인드를 이용했다.
 크루스칼 알고리즘과 유니온 - 파인드 알고리즘은 처음 접해보는 거라 정보를 찾아보았다.

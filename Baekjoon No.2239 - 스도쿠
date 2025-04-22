@@ -154,6 +154,7 @@ for line in sudoku:
 재귀를 어떻게든 써보려고 시도 해서 조금 시간이 걸리기도 했고 헤맸다. 결국에는 메모리 초과를 해결하지 못해서 반복문을 사용했으나 푼것에 의의를 두려고한다.
 인덱스를 앞뒤로 이리저리 이동시키다가 자꾸만 빈칸이 남은채로 출력이 되기도 했다. 하지만 이과정을 해결해나가는 과정이 매우 재미있었다.
 이문제를 재귀로 풀려고 시도하면서 머리가 너무 아팠는데 재귀에 대한 부족함을 뼈저리게 느꼈다. 앞으로 다른 문제를 풀때 재귀를 적극적으로 이용해서 역량을 높여야겠다.
+어떻게든 재귀로 살려볼려고 반복문으로 다시 작성하면서도 해당 함수를 주석으로 달아놓고 살려놨다. 가슴아픈, 그리고 진짜 못만든 메모리초과 함수를 아래에 첨부했다.
 
 I spent quite a bit of time trying to use recursion one way or another, and I got a bit lost along the way. In the end, 
 I couldn’t solve the memory limit issue with the recursive approach, so I switched to using loops. 
@@ -162,3 +163,39 @@ While trying to move the index back and forth, I often ended up with outputs whe
 However, the process of debugging and figuring things out was really fun and satisfying.
 Attempting to solve this problem recursively gave me a serious headache, and I keenly realized how lacking I am when it comes to recursion. Moving forward, 
 I want to actively use recursion in other problems to improve my skills.
+I tried to salvage the recursive approach no matter what—even as I rewrote the solution using loops, I kept the recursive function commented out in the code, 
+unable to let it go. It’s a painful reminder… and truly a poorly written function that caused memory overflow. I’ve included it below for posterity.
+
+```python
+'''
+def find(sudoku, start_i, start_j, start_k):
+  found = False
+  for i in range(start_i, 9):
+    for j in range(start_j if i == start_i else 0, 9):
+      #index 도달
+      if not is_blank[i][j]:
+        continue
+      for k in range(start_k, 10):
+        if is_possible(i, j, k):
+          sudoku[i][j] = k
+          start_i, start_j = 0, 0
+          start_k = 1
+          found = True
+          break
+      if found:
+        found = False
+        continue
+      #선택불가
+      r, c = i, j
+      c -= 1
+      if c == -1:
+        r, c = r - 1, 8
+      while is_blank[r][c] == False:
+        c -= 1
+        if c == -1:
+          r, c = r - 1, 8
+      st = sudoku[r][c] + 1
+      sudoku[i][j] = 0
+      find(sudoku, r, c, st)
+      return True
+'''

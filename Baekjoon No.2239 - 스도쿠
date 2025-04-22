@@ -1,0 +1,164 @@
+# Baekjoon No.2239 - 스도쿠
+
+- [문제 링크](https://www.acmicpc.net/problem/2239)
+
+## 문제 설명 Problem Description
+9개의 줄에 9개의 숫자로 스도쿠 보드가 입력된다. 아직 숫자가 채워지지 않은 칸에는 0이 주어진다.
+9개의 줄에 9개의 숫자로 답을 출력한다. 답이 여러 개 있다면 그 중 사전식으로 앞서는 것을 출력한다. 즉, 81자리의 수가 제일 작은 경우를 출력한다.
+
+The Sudoku board is given as 9 lines, each containing 9 digits.
+Cells that are not yet filled are represented by 0.
+The output should be 9 lines, each containing 9 digits representing the completed board.
+If there are multiple possible solutions, the one that comes first in lexicographical (dictionary) order should be printed — in other words, 
+the solution that results in the smallest 81-digit number.
+
+
+
+## 생각 과정 Thought Process
+1. ** 재귀와 백트래킹 **
+처음에 문제를 어떻게 접근해야 할지 생각하는 것은 간단했다. 스도쿠 보드가 9*9 수준으로 크기가 작아서 단순한 재귀와 백트래킹으로만 구현하면 됐다.
+하지만 구현하는 과정에서 상당히 오랜시간을 썻다. 간단한 로직인데 재귀에 능숙하지 않아서 정답은 나오지만 재귀함수 위에 재귀함수가 계속 쌓여서 메모리 초과가 나고 말았다.
+부분부분 return을 추가해 이를 줄여보려고 했지만 역부족이라 다른 방법을 사용하기로 했다.
+
+2. ** 반복문과 백트래킹 **
+조금더 익숙한 반복문을 사용하기로 했다. 코드도 거의 2/3으로 줄었고 더욱 직관적으로 보였다.
+스도쿠 인덱스 이동을 위한 index_cal()과 안에 임의의 값을 할당 할수 있을지 여부를 확인하는 is_possible() 그리고 스도쿠를 채우는 find() 함수를 만들었다.
+is_possible()에서 행과 열에 해당수가 있는지 확인후 9*9 보드를 3*3으로 나누기 위해 row//3 * 3 부터 row//3 * 3 + 3 까지, col 도 마찬가지로 범위를 잡은후에 확인했다.
+find 함수 안에선 is_blank 행렬로 빈칸인지 확인후 1부터 9까지 오름차순으로 is_possible() 함수를 이용해 할당 가능한 값이라면 할당후 다음으로 이동했다.
+만약 할당되지도 못했다면 백트래킹을 시도해야하기때문에 이전 빈칸까지 뒤로이동한 후 해당 빈칸값보다 1 큰수부터 할당을 시도 하도록 구현했다.
+
+1. ** Recursion and Backtracking **
+The Sudoku board is small (9×9), so it could be solved using simple recursion and backtracking.
+However, I spent a lot of time on the implementation. Even though the logic was simple, 
+I wasn’t proficient with recursion, so the recursive function kept stacking on top of itself, eventually leading to a memory overflow.
+I tried adding some return statements to reduce the call stack, but it wasn’t enough, so I decided to use a different approach.
+
+2. ** Loops and Backtracking **
+I created three functions: index_cal() for moving through Sudoku indices, is_possible() to check whether a value can be assigned, and find() to fill in the Sudoku board.
+In is_possible(), I checked whether the number already existed in the same row or column. Then, to check the 3×3 subgrid,
+I set the range from row // 3 * 3 to row // 3 * 3 + 3, and did the same for the column. Inside the find() function, I used an is_blank matrix to check if a cell was empty.
+If it was, I tried assigning numbers from 1 to 9 in ascending order using is_possible().
+If no number could be assigned, I attempted backtracking by moving back to the previous blank cell and trying the next number greater than the one already placed there.
+
+
+
+##코드 설명 Code
+
+```python
+def index_cal(i, j, increase = True):
+  if increase:  # 앞으로 이동
+    j += 1
+    if j > 8:
+      i += 1
+      j = 0
+
+  else:         # 뒤로이동
+    j -= 1
+    if j < 0:
+      i -= 1
+      j = 8
+  return i, j
+
+# 해당 자리에 수를 넣을 수 있는지 여부 확인
+def is_possible(row, col, number):
+  for i in range(9):
+    if sudoku[row][i] == number and i != col:
+      return False
+    if sudoku[i][col] == number and i != row:
+      return False
+
+  a, b = row // 3, col // 3
+  for i in range(a * 3, a * 3 + 3):
+    for j in range(b * 3, b * 3 + 3):
+      if sudoku[i][j] == number and i != row and j != col:
+        return False
+  return True
+
+def find(sudoku):
+  # 초기 설정
+  i, j = 0, 0
+  start_k = 1
+
+  # 스도쿠 완성까지 while 문으로 반복
+  while i < 9:
+    # 빈칸이 아니면 다음으로 넘어감
+    if not is_blank[i][j]:
+      i, j = index_cal(i, j, True)
+      continue
+
+    # 빈칸에 알맞는 값 찾기
+    found = False
+    for k in range(start_k, 10): #오름차순(중복 답일 경우 사전순 출력 위함)
+      if is_possible(i, j, k):
+        sudoku[i][j] = k
+        i, j = index_cal(i, j, True)
+        start_k = 1
+        found = True
+        break
+    if found:
+      continue
+    
+    # 알맞는 값 할당 불가
+    sudoku[i][j] = 0
+    i, j = index_cal(i, j, False)
+    # 이전 빈칸까지 뒤로이동
+    while not is_blank[i][j]:
+      i, j = index_cal(i, j, False)
+    #이전 빈칸에 할당했던 값보다 큰값부터 탐색
+    start_k = sudoku[i][j] + 1
+
+sudoku = []
+is_blank = [] # 빈칸 여부 매트릭스
+for i in range(9):
+  temp = [False] * 9
+  line = input()
+  numbers = list(map(int, line))
+  for j in range(9):
+    if numbers[j] == 0:
+      temp[j] = True
+  is_blank.append(temp)
+  sudoku.append(numbers)
+
+
+find(sudoku)
+for line in sudoku:
+  print("".join(map(str, line)))
+
+
+
+## 예시 입력 Sample Input
+103000509
+002109400
+000704000
+300502006
+060000050
+700803004
+000401000
+009205800
+804000107
+
+## 예시 출력 Sample Output
+143628579
+572139468
+986754231
+391542786
+468917352
+725863914
+237481695
+619275843
+854396127
+
+
+
+## 마무리 Conclusion or Reflection
+재귀를 어떻게든 써보려고 시도 해서 조금 시간이 걸리기도 했고 헤맸다. 결국에는 메모리 초과를 해결하지 못해서 반복문을 사용했으나 푼것에 의의를 두려고한다.
+인덱스를 앞뒤로 이리저리 이동시키다가 자꾸만 빈칸이 남은채로 출력이 되기도 했다. 하지만 이과정을 해결해나가는 과정이 매우 재미있었다.
+이문제를 재귀로 풀려고 시도하면서 머리가 너무 아팠는데 재귀에 대한 부족함을 뼈저리게 느꼈다. 앞으로 다른 문제를 풀때 재귀를 적극적으로 이용해서 역량을 높여야겠다.
+
+I spent quite a bit of time trying to use recursion one way or another, and I got a bit lost along the way. In the end, 
+I couldn’t solve the memory limit issue with the recursive approach, so I switched to using loops. 
+Still, I consider it meaningful that I was able to solve the problem at all.
+While trying to move the index back and forth, I often ended up with outputs where some blank spaces remained unfilled. 
+However, the process of debugging and figuring things out was really fun and satisfying.
+Attempting to solve this problem recursively gave me a serious headache, and I keenly realized how lacking I am when it comes to recursion. Moving forward, 
+I want to actively use recursion in other problems to improve my skills.

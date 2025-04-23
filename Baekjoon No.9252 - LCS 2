@@ -1,0 +1,92 @@
+# Baekjoon No.9252 - LCS 2
+
+- [문제 링크](https://www.acmicpc.net/problem/9252)
+
+## 문제 설명 Problem Description
+첫째 줄과 둘째 줄에 두 문자열이 주어진다. 문자열은 알파벳 대문자로만 이루어져 있으며, 최대 1000글자로 이루어져 있다.
+첫째 줄에 입력으로 주어진 두 문자열의 LCS의 길이를, 둘째 줄에 LCS를 출력한다.
+LCS가 여러 가지인 경우에는 아무거나 출력하고, LCS의 길이가 0인 경우에는 둘째 줄을 출력하지 않는다.
+
+Two strings are given as input on the first and second lines, respectively.
+Each string consists only of uppercase English letters and is up to 1000 characters long.
+Print the length of the Longest Common Subsequence (LCS) of the two input strings on the first line.
+On the second line, print the actual LCS.
+If there are multiple possible LCS results, you may print any one of them.
+If the length of the LCS is 0, do not print anything on the second line.
+
+## 생각 과정 Thought Process
+1. ** 동적계획법 **
+최장공통부분수열의 길이를 구하는건 이미 다뤄봤으므로 동적계획법을 사용하여 푸는것임을 알고 있었으므로 길이를 구하는 것엔 문제가 없었다.
+각 수열의 길이에 1을 더하고 서로 곱한 크기의 행렬을 만든 후 초기값은 0으로 초기화, for 루프를 통한 DP 계산으로 길이를 구했다.
+
+2. ** 역추적 **
+LCS 2 문제에서는 길이 말고도 최장길이의 가진 수열을 직접 출력하도록 했다. 처음에는 DP 테이블을 3차원 행렬로 만들어 동적계획법과 함께 문자를 추가 해나가며 한번에 구하려고 했다.
+하지만 메모리 관리쪽에서 안좋은 결과가 나올 것으로 보여 다른 방법을 모색하려 했으나 실패했다. 그래서 서칭을 통해 역추적하여 LCS를 구하는 방법을 얻어냈다.
+코드를 직접 살펴보니 수열에 각각 마지막을 가리키는 포인터를 부여한후 그 포인터가 서로 같은 문자를 가리키면 결과에 추가하고 만약 다르다면 DP 테이블 값과 비교하여 적절히 이동시켰다.
+이 적절히 이동시킨다는 것이 이해하기 쉽지않아서 직접 DP 테이블을 그려서 어떻게 이동하는지 직접 관찰했다.
+DP 테이블을 만들때와 비슷한 느낌을 받았는데 포인터는 줄어들되 가장 많이 문자를 추가할 수 있는 방향으로 적절히 움직이면 된다 라고 이해했다.
+
+1. ** Dynamic Programming **
+I already knew that finding the length of the Longest Common Subsequence (LCS) could be solved using dynamic programming, as I had dealt with similar problems before.
+To do this, I created a 2D matrix with dimensions (len(A)+1) x (len(B)+1) and initialized all values to 0.
+Using nested for loops, I filled in the DP table by comparing characters of the two strings and updating values accordingly, 
+so calculating the length of the LCS was no issue.
+
+2. ** Backtracking **
+I learned the method of reconstructing the LCS through backtracking by searching online.
+By looking through example code, I understood that it uses two pointers (one for each sequence) starting from the end.
+If the characters pointed to are the same, they are added to the result. If not, 
+I compare the values in the DP table and move the pointer in the direction of the larger value.
+This “moving in the right direction” wasn’t intuitive at first, so I manually drew the DP table and carefully observed how the pointer moved.
+It felt similar to how I initially built the DP table, but this time the pointers move backward, 
+and I understood that they should move in a way that allows us to collect the most characters for the LCS.
+
+
+##코드 설명 Code
+
+```python
+A = input()
+B = input()
+n, m = len(A), len(B)
+
+dp = [[0] * (m + 1) for _ in range(n + 1)]  # dp 테이블
+
+# LCS 길이 구하기
+for i in range(1, n + 1):
+  for j in range(1, m + 1):
+    if A[i - 1] == B[j - 1]:
+      dp[i][j] = dp[i - 1][j - 1] + 1
+    else:
+      dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])
+
+i, j = n, m 
+LCS = []
+# 역추적으로 LCS 구하기
+while i > 0 and j > 0: 
+  if A[i - 1] == B[j - 1]:
+    LCS.append(A[i - 1])
+    i ,j = i - 1, j - 1
+  elif dp[i - 1][j] > dp[i][j - 1]:
+    i -= 1
+  else:
+    j -= 1
+print(dp[n][m])
+print("".join(reversed(LCS)))
+
+
+## 예시 입력 Sample Input
+ACAYKP
+CAPCAK
+
+## 예시 출력 Sample Output
+4
+ACAK
+
+## 마무리 Conclusion or Reflection
+DP 테이블을 이용해 역추적을 처음으로 사용해 보았다. 코드를 시각화 하여 직관적으로 보니 그냥 코드로만 보는 것보다 이해가 쉬웠고 숨어있는 강력한 로직이라는 것을 깨달았다.
+다음의 DP 문제에서 역추적을 요구할때 이런 패턴으로 접근하면 될 것 같다.
+
+This was my first time using a DP table for backtracking.
+By visualizing the code and the table, I found it much easier to understand than just reading the code alone.
+I realized how powerful this hidden logic is, 
+and I think I’ll be able to approach similar problems with this pattern in future DP problems that require reconstruction of a solution.

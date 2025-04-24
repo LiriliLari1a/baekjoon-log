@@ -1,0 +1,117 @@
+# Baekjoon No.10942 - 팰린드롬?
+
+- [문제 링크](https://www.acmicpc.net/problem/10942)
+
+
+## 문제 설명 Problem Description
+수열의 크기 N(1 ≤ N ≤ 2,000), N개로 이루어진 수열(Aₙ ≤ 100,000), 팰린드롬을 구해야 하는 개수 M((1 ≤ M ≤ 1,000,000) 이 각줄에 주어지고 M개의 줄에 S, E 가 주어지는데
+S번째 수부터 E번째 까지 수가 팰린드롬을 이루는지를 물어보는 것이다.
+M개의 줄에 각줄마다 팰린드롬인 경우에는 1, 아닌 경우에는 0을 출력한다.
+
+You are given a sequence of integers of size N (1 ≤ N ≤ 2,000), where each element Aₙ ≤ 100,000. You are also given M queries (1 ≤ M ≤ 1,000,000), 
+each consisting of two integers S and E. Each query asks whether the subarray from the S-th to the E-th element (inclusive) is a palindrome.
+1 : if the subarray is a palindrome
+0 : otherwise
+
+For each of the M queries, print:
+## 생각 과정 Thought Process
+1. ** 전처리 **
+처음 문제를 봤을 때 눈에 들어온 것은 쿼리의 개수가 많다는 것이다. 그래서 팰린드롬의 범위가 주어질때 마다 어떻게 효율적으로 계산하여 출력할지 생각하는 것보다
+정답을 미리 저장하여 꺼내 쓰는것이 훨씬 빠를 것이라고 생각했다.
+
+2. ** 홀수와 짝수 **
+팰린드롬을 구하기 위해선 홀수와 짝수를 구분하여야 한다. 지금은 마나커 알고리즘의 존재를 알았지만 오늘 당시 코드를 풀땐 모르고 있었으므로 홀수개와 짝수개를 구분지어 함수를 따로따로 만들었다
+팰린드롬수의 개수가 홀수개 일때는 N개의 리스트로 기준은 각 수열의 숫자위치이고, 짝수개 일때는 N-1개의 리스트로 기준은 각 수열의 숫자 사이의 위치이다.
+각 함수에서 리턴되는 값은 기준값에서 왼쪽으로 어디까지 팰린드롬인지를 나타낸다. 어짜피 오른쪽으로는 왼쪽부터 기준까지 대칭이므로 따로 값이 필요하지않다.
+
+3. ** 계산 구현 **
+각 S, E 가 입력되면 대칭의 기준점을 찾고 홀수 짝수 여부를 판별한 후 S와 E중 작은 값을 함수를 통헤 만든 리스트와 비교한다. 
+만약 그 작은 값이 팰린드롬의 시작범위보다 크면 당연히 팰린드롬 이므로 1을 출력하게끔 하고 아니라면 0을 출력하도록 했다. 
+
+1. ** Preprocessing **
+What stood out to me right away was the large number of queries. Rather than calculating whether each given range forms a palindrome every time, I thought it would be much faster to precompute and store the answers, and simply retrieve them as needed.
+
+2. ** Odd and Even Lengths **
+When the number of elements in the palindrome is odd, I used a list of size N, with each index corresponding to a specific position in the sequence.
+When the count is even, I used a list of size N - 1, with each index representing the position between two numbers.
+The value returned from each function represents how far to the left the palindrome extends from the center. Since the right side is a mirror of the left side, we don't need to store that separately.
+
+3. ** Implementation **
+When S and E are given as input, I calculated the midpoint to determine the center of symmetry and checked whether the number of elements is odd or even.
+Then, I compared the smaller of S or E with the precomputed starting index of the palindrome.
+If the smaller index is greater than or equal to the palindrome's start index, that means the entire range is a palindrome, and I output 1. Otherwise, I output 0.
+
+
+##코드 설명 Code
+
+```python
+# 팰린드롬 숫자의 개수가 홀수
+def search_odd(mid):
+  diff = 1
+  while mid - diff > -1 and mid + diff < N:
+    if A[mid - diff] == A[mid + diff]:
+      diff += 1
+    else:
+      break
+  
+  return mid - diff + 1
+
+# 팰린드롬 숫자의 개수가 짝수
+def search_even(mid):
+  diff = 0
+  while mid - diff > -1 and mid + diff + 1 < N:
+    if A[mid - diff] == A[mid + diff + 1]:
+      diff += 1
+    else:
+      break
+  if diff == 0:
+    return 100000   # 주어지는 수중 최댓값
+  return mid - diff + 1
+
+N = int(input())
+A = list(map(int, input().split()))
+M = int(input())
+temp_odd = [0] * (N)
+temp_even = [0] * (N - 1)
+
+# 팰린드롬수 정보 저장
+for i in range(N - 1):
+  temp_odd[i] = search_odd(i)
+  temp_even[i] = search_even(i)
+temp_odd[N - 1] = N - 1
+
+for _ in range(M):
+  S, E = map(int, input().split())
+  if S == E:
+    print(1)
+    continue
+  middle = (S + E) / 2 - 1
+  if middle % 1 == 0:   # 개수가 홀수
+    if temp_odd[int(middle)] < min(S, E):
+      print(1)
+    else:
+      print(0)
+  if middle % 1 != 0:   # 개수가 짝수
+    if temp_even[int(middle)] < min(S, E):
+      print(1)
+    else:
+      print(0)
+
+
+## 예시 입력 Sample Input
+3
+1 0 1
+1
+1 3
+
+## 예시 출력 Sample Output
+1
+
+
+## 마무리 Conclusion or Reflection
+나중에 코드를 되돌아보며 마나커 알고리즘을 보았는데 모든 수열사이와 처음과 끝에 임의의 문자를 넣는 전처리로 홀수 짝수를 구분짓는 번거로움을 해결하는 방법도 있었다.
+마나커 알고리즘은 나중에 팰린드롬을 시도해 볼때 사용해 봐야할 것같다. 의식의 흐름대로 코드를 짜다보니 조금 지저분하게 되었지만 알고보면 굉장히 단순한 코드인것 같다.
+결괏값을 미리 저장해서 간단한 처리만 한 후 출력시키는 형식의 문제인 것만 알면 굉장히 편하게 코드를 짤 수 있다.
+
+If you understand that the goal of the problem is to precompute the results and handle each query with a simple lookup,
+then writing clean and efficient code becomes much easier.

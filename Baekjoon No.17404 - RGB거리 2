@@ -1,0 +1,98 @@
+# Baekjoon No.17404 - RGB거리 2
+
+- [문제 링크](https://www.acmicpc.net/problem/17404)
+
+
+## 문제 설명 Problem Description
+1번 집의 색은 2번, N번 집의 색과 같지 않아야 한다.
+N번 집의 색은 N-1번, 1번 집의 색과 같지 않아야 한다.
+i(2 ≤ i ≤ N-1)번 집의 색은 i-1, i+1번 집의 색과 같지 않아야 한다.
+첫째 줄에 집의 수 N(2 ≤ N ≤ 1,000)이 주어진다.
+둘째 줄부터 N개의 줄에는 각 집을 빨강, 초록, 파랑으로 칠하는 비용이 1번 집부터 한 줄에 하나씩 주어진다. 집을 칠하는 비용은 1,000보다 작거나 같은 자연수이다.
+첫째 줄에 모든 집을 칠하는 비용의 최솟값을 출력한다.
+
+You are given an integer N (2 ≤ N ≤ 1,000), representing the number of houses.
+Each of the next N lines contains three integers, each ≤ 1,000, which represent the cost of painting the house in Red, Green, or Blue.
+You must paint all houses such that:
+No two adjacent houses are painted the same color.
+Because the houses are in a circle, the first and last houses are also adjacent.
+The goal is to minimize the total cost of painting all houses.
+
+
+## 생각 과정 Thought Process
+1. ** 동적 계획법 - 1 **
+문제를 보자마자 동적 계획법으로 풀어야 되겠다는 생각을 했다. 그리고 1번집과 N번집의 색상이 달라야 하므로 원형 리스트이다.
+어떻게 풀어야 하나 고민을 했는데 그냥 마지막에 처리를 따로 한번 더 하기로 했다.
+dp 테이블의 크기는 3 * N 이며 원형리스트이기 때문에 첫번째 집의 색상을 선택하는 경우의 수마다 dp를 실행시키기로 했다. 
+
+1. ** 동적 계획법 - 2 **
+길이가 3인 열에 각각 R, G, B를 선택했을 때 비용을 저장해놓고 이전에 저장한 색상과 다른 두가지 색상의 비용을 계산하여 최솟값을 저장했다.
+마지막 처리를 어떻게 해야 하나 고민했는데 처음에는 처음색상과 N-1 번째 색상이 정해져 있으므로 N 번째 색상은 하나로 정해지는 것 아닌가 하는 생각을 했는데
+첫번쨰 색상과 N-1 번째 색상이 같을 수도 있으므로 첫번째 for k 루프에서 N-1 번째와 다른색상을 거르고 마지막 for fin 루프에서 첫번째 색상과 다른색상으로 거르기로 했다.
+
+1. ** Dynamic Programming - 1 **
+As soon as I read the problem, I immediately thought that dynamic programming would be the right approach. 
+Since the first and last houses must be painted in different colors, the house layout effectively forms a circular list.
+I initially considered how to handle this, 
+and eventually decided to run the DP algorithm multiple times—once for each possible initial color of the first house—and then handle the circular condition at the end.
+I created a 2D dp table of size N x 3, where each row represents a house and each column represents one of the three colors (Red, Green, Blue). 
+Because it's a circular configuration, I ran the DP process three times, once for each choice of the first house’s color.
+
+2. ** Dynamic Programming - 2 **
+At first, I thought the last color would be automatically determined once the first and N-1th colors were fixed.
+However, since the N-1th color can be the same as the first, I added separate checks for both conditions at the end.
+
+
+##코드 설명 Code
+
+```python
+INF = float('inf')
+
+N = int(input())
+house = []  # 집을 칠하는 비용 저장
+result = INF
+
+for i in range(N):
+  house.append(list(map(int, input().split())))
+
+# 첫번째 집의 색상을 선택하는 경우의 수만큼 dp 실행
+for init in range(3):
+  dp = [[INF] * 3 for _ in range(N)]
+  dp[0][init] = house[0][init]
+
+  for i in range(1, N):
+    for j in range(3):    # 이전 집의 색상
+      for k in range(3):   # 현재 집의 색상
+        if j != k:          # 이전 집의 색상과 현재 집의 색상이 달라야 함
+          # 현재 고를 수 있는 두 색상중 비용의 최솟값 저장
+          dp[i][j] = min(dp[i][j], dp[i-1][k] + house[i][j])
+  # dp에 저장되어있는 색상중 첫번쨰 집의 색상과 다른 색상중 최솟값을 선택
+  for fin in range(3):
+    if fin != init:
+      result = min(result, dp[N-1][fin])
+
+print(result)
+
+
+## 예시 입력 Sample Input
+8
+71 39 44
+32 83 55
+51 37 63
+89 29 100
+83 58 11
+65 13 15
+47 25 29
+60 66 19
+
+## 예시 출력 Sample Output
+253
+
+
+## 마무리 Conclusion or Reflection
+처음에 문제를 접했을 땐 이것이 동적 계획법으로 풀어야 하는 문제라는걸 알았지만 원형리스트로 생각하며 마지막 처리를 하는데에 사고의 오류가 조금 있었다.
+하지만 코드를 짜다 바로 잡았다. dp 점화식을 세우는데에 아직은 시간이 좀 걸리지만 그래도 해볼만 한것 같다.
+
+I recognized it as a DP problem, but the circular constraint was tricky.
+At first, I misjudged how to handle the last house’s color, but fixed it while coding.
+Writing recurrence still takes time, but I’m improving and gaining confidence with patterns like this.

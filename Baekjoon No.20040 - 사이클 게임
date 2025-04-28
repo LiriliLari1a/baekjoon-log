@@ -1,0 +1,119 @@
+# Baekjoon No.20040 - 사이클 게임
+
+- [문제 링크](https://www.acmicpc.net/problem/20040)
+
+
+## 문제 설명 Problem Description
+입력의 첫 번째 줄에는 점의 개수를 나타내는 정수 3 ≤ n ≤ 500,000 과 진행된 차례의 수를 나타내는 정수 3 ≤ m ≤ 1,000,000 이 주어진다. 
+게임에서 사용하는 n개의 점에는 0 부터 n − 1 까지 고유한 번호가 부여되어 있으며, 이 중 어느 세 점도 일직선 위에 놓이지 않는다. 
+이어지는 m 개의 입력 줄에는 각각 i번째 차례에 해당 플레이어가 선택한 두 점의 번호가 주어진다 (1 ≤ i ≤ m).
+그 두점을 이으며 어느 세 점도 일직선 위에 놓이지 않는다. 임의의 선분의 한 끝점에서 출발하여 모든 선분을 한 번씩만 지낫 출발점으로 되돌아오면 게임이 종료된다.
+m 번째 차례까지 게임을 진행한 상황에서 이미 게임이 종료되었다면 사이클이 처음으로 만들어진 차례의 번호를 양의 정수로 출력하고,
+m 번의 차례를 모두 처리한 이후에도 종료되지 않았다면 0을 출력한다.
+
+You are given n points (0 to n-1) and m moves. Each move connects two points with a line segment. No three points are collinear. 
+If at any move, a cycle is formed (a closed path visiting each segment exactly once and returning to the start),
+print the move number when the first cycle occurs. If no cycle is formed after all moves, print 0.
+
+
+## 생각 과정 Thought Process
+1. ** 유니온파인드 **
+사실 유니온 파인드를 사용하면 쉽게 풀렸을 것 같다. 하지만 내가 하고싶은 다른 방법을 시도했다.
+
+2. ** 노드와 그룹 리스트 **
+처음에는 visited 리스트를 하나 만들어서 tied 변수를 통해 같은 그룹이면 같은 수를 넣어 그룹을 감지하려 했으나 입력이 복잡해지면 따로 처리가 어려워 save 리스트를 만들어 노드 리스트로 관리했다.
+그 이후 구현은 직관적이고 너무나도 쉬웠다. 노드의 방문여부에 따라 if 문으로 간단하게 처리만 하면 됐다.
+
+1. **  Union-Find **
+Although Union-Find would have made this problem easier, I wanted to try a different approach.
+
+2. ** Node and Group Lists **
+Initially, I used a visited list with a tied counter to track groups. However, as inputs became more complex, 
+I introduced a save list to manage nodes directly. From there, the logic became straightforward, using simple if statements based on visit status.
+
+
+##코드 설명 Code
+
+```python
+import sys
+input = sys.stdin.readline
+
+n, m = map(int, input().split())
+
+visited = [0] * n   # 노드가 어느 그룹에 속해 있는지 저장.
+save = [[] for _ in range(n // 2 + 1)]  # 그룹 번호에 속한 노드 리스트
+count = 0   # 게임 진행 횟수
+tied = 1    # visited 리스트 인덱스 관리 변수
+saved = 1   # save 리스트 인덱스 관리 변수
+found = False   # 사이클 감지 변수
+
+for _ in range(m):
+  a, b = map(int, input().split())
+  # 만약 사이클을 찾았으면 더이상 사이클을 확인하지 않음
+  if found:
+    continue
+
+  # 두 노드 모두 방문하지 않았을 때
+  if visited[a] == 0 and visited[b] == 0:
+    visited[a] = visited[b] = tied
+    save[saved].append(a)
+    save[saved].append(b)
+    tied += 1
+    saved += 1
+    count += 1
+
+  # 두 노두 방문한 노드일 때
+  elif visited[a] != 0 and visited[b] != 0:
+    # 두 노드가 같은 그룹일때 => 사이클 감지
+    if visited[a] == visited[b]:
+      found = True
+      count += 1
+    # 두 노드가 다른 그룹일 때 => 그룹 병합
+    else:
+      vA, vB = visited[a], visited[b]
+      for item in save[vB]:
+        save[vA].append(item)
+        visited[item] = vA
+      save[vB] = []
+      count += 1
+  
+  # a 만 방문한 노드일 떄
+  elif visited[a] != 0:
+    visited[b] = visited[a]
+    save[visited[a]].append(b)
+    count += 1
+
+  # b 만 방문한 노드일 때
+  elif visited[b] != 0: 
+    visited[a] = visited[b]
+    save[visited[b]].append(a)
+    count += 1
+
+if found:
+  print(count)
+else:
+  print(0)
+
+
+## 예시 입력 Sample Input
+10 9
+1 5
+5 8
+7 6
+9 1
+0 5
+5 4
+4 3
+2 7
+9 8
+
+## 예시 출력 Sample Output
+9
+
+
+## 마무리 Conclusion or Reflection
+그룹 병합을 하다 사소한 실수로 변수관리를 잘못하는 바람에 두번정도 틀리게 제출했다. 혹시나 시간 초과나 메모리 초과등 문제가 생기면 유니온파인드를 사용할 계획이었으나
+짧은 시간에 직관적으로 코드를 짜보았는데 어렵지 않게 성공했다.
+
+While merging groups, I made a small mistake with variable management and submitted a wrong answer twice.
+I planned to switch to Union-Find if time or memory became an issue, but my intuitive solution worked well without much difficulty.

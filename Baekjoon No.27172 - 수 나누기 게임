@@ -1,0 +1,77 @@
+# Baekjoon No.27172 - 수 나누기 게임
+
+- [문제 링크](https://www.acmicpc.net/problem/27172)
+
+## 문제 설명 Problem Description
+각 플레이어는 1부터 1,000,000 사이의 서로 다른 수가 적힌 카드를 갖는다.
+자신을 제외한 모든 플레이어와 1번씩 대결하며, 다음 규칙에 따라 점수를 얻는다.
+자신의 수로 상대 수를 나눌 수 있으면 승리(+1점), 상대 수로 자신의 수가 나누어지면 패배(-1점), 둘 다 아니면 무승부(점수 변화 없음).
+모든 경기가 끝난 후 각 플레이어의 점수를 구하라.
+
+Each player holds a unique card with a number between 1 and 1,000,000.
+Every player plays exactly one match against every other player, following these rules:
+If their number divides the opponent's, they win (+1 point).
+If their number is divisible by the opponent's, they lose (-1 point).
+If neither, it's a draw (0 points).
+Calculate the final score for each player after all matches are played.
+
+
+## 생각 과정 Thought Process
+1. ** 에라토스테네스의 체 **
+사실 계산이 너무 많아서 이걸 어떻게 효율적으로 처리를 해서 시간초과가 나지 않게 해야 할지 조금 막막했다. 그래서 알고리즘 분류를 봤는데 에라토스테네스의 체와 관련된 문제라고 하였다. 
+처음에는 이해가 잘 가지 않았지만 메모리 허용 용량이 큰 것을 보고 일단 리스트를 최대 크기로 잡고 넓게 사용하기로 했다. 일단 점수를 저장하는 리스트와 각 플레이어의 숫자를 받은 리스트를 만들었다.
+최초에 제출할 떄는 추가적으로 플레이어의 숫자를 딕셔너리로 만들어 그 딕셔너리 안에 플레이어 숫자의 배수를 저장 한 후에 for 루프로 플레이어 리스트를 돌며 그안에 그 숫자가 있는지를 확인하여 승패를 판별했으나 이건 시간초과가 났다(O(N^2)).
+
+2. ** 참가 여부 리스트 **
+그래서 1,000,001 길이의 joined 리스트를 만들어 각 인덱스의 숫자에 해당 숫자의 참가여부를 bool로 저장하고 플레이어 리스트에 있는 수를 배로 곱하며 joined가 True인지 확인하였다.
+
+1. ** Sieve of Eratosthenes **
+Initially attempted to store multiples of each number for every player to determine wins/losses, but this led to an O(N²) time complexity and caused a timeout.
+
+2. ** Participation Tracking **
+Used a boolean list joined of length 1,000,001 to track which numbers are in play. Then, iterated over each player's number and checked its multiples to efficiently calculate results.
+
+
+
+##코드 설명 Code
+
+```python
+import sys
+input = sys.stdin.readline
+
+N = int(input())
+
+player = list(map(int, input().split()))
+score = [0] * 1000001   # 점수 저장
+joined = [False] * 1000001  # 참가 여부
+
+# 참가 여부 저장
+for num in player:  
+  joined[num] = True
+
+# 이길 수 있는 참가자 찾기
+for item in player:
+  for j in range(item * 2, 1000001, item):
+    if joined[j] == True:
+      score[item] += 1
+      score[j] -= 1
+
+# 출력
+for person in player:
+  print(score[person], end = " ")
+
+
+## 예시 입력 Sample Input
+7
+3 6 9 2 11 17 123
+
+## 예시 출력 Sample Output
+3 -2 -1 1 0 0 -1 
+
+
+## 마무리 Conclusion or Reflection
+마지막으로 수정한 코드는 굉장히 짧았다. 에라토스테네스의 체를 이용하란 말에 도대체 어떻게 이걸 이용해야 하는지 많은 생각이 있었다. 그냥 에라토스테네스의 체를 잊어 버리고 다른 생각을 가지고 직접 구현을 해봤는데 성공했다.
+코드를 다시 살펴보면 에라토스테네스의 체와 유사하긴 했다. 코드가 짧고 직관적인 것에 비해 효율적인 계산을 위해 많은 생각을 하게 했던 문제였다.
+
+The final version of the code turned out to be very short. Although the problem hinted at using the Sieve of Eratosthenes, it wasn’t obvious how to apply it directly. I ended up implementing my own logic and it worked.
+Looking back, the solution does resemble the sieve in concept. Despite the concise and intuitive code, solving this problem required careful thought about efficient computation.

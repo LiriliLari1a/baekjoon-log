@@ -1,0 +1,90 @@
+# Baekjoon No.1644 - 소수의 연속합
+
+- [문제 링크](https://www.acmicpc.net/problem/1644)
+
+
+## 문제 설명 Problem Description
+자연수가 주어졌을 때, 이 자연수를 연속된 소수의 합으로 나타낼 수 있는 경우의 수를 구하는 프로그램을 작성하시오.
+첫째 줄에 자연수 N이 주어진다. (1 ≤ N ≤ 4,000,000)
+첫째 줄에 자연수 N을 연속된 소수의 합으로 나타낼 수 있는 경우의 수를 출력한다.
+
+Given a natural number N, write a program to count the number of ways N can be expressed as the sum of consecutive prime numbers.
+Input A single line containing the natural number N. (1 ≤ N ≤ 4,000,000)
+Print the number of ways N can be represented as a sum of consecutive prime numbers.
+
+
+## 생각 과정 Thought Process
+1. ** 에라토스테네스의 체**
+연속된 소수의 합을 이용해야 하므로 에라토스테네스의 체로 소수 리스트를 작성하여 문제를 풀어야 겠다고 생각했다. 에라토스테네스의 체를 이용하여 처음에 코드를 작성해 보았는데 범위 부분에서 최적화를 어떻게 할까 하다가
+인터넷의 도움을 좀 받아 작성했다.
+
+2. ** 투 포인터 **
+소수로 오름차순 정리가 된 리스트 작성이 완료되었으므로 N을 입력받고 투 포인터, 슬라이싱 윈도우를 사용하여 부분합에 따른 값으로 적절히 포인터를 이동시키며 경우의 수를 셌다.
+
+1. ** Sieve of Eratosthenes **
+Since the problem required the use of consecutive prime sums, I decided to generate a prime number list using the Sieve of Eratosthenes. 
+I initially struggled with the range optimization but managed to implement it with some help from online resources.
+
+2. ** Two Pointers (Sliding Window) **
+After generating the sorted list of prime numbers, I used the two-pointer (sliding window) technique to count how many ways the sum of consecutive primes equals the input N.
+
+
+##코드 설명 Code
+
+```python
+import sys
+
+input = sys.stdin.readline
+
+max = 4000000   # 최대 입력
+
+# 소수 구하기 (에라토스 테네스의 체)
+is_prime = [False, False] + [True] * (max - 1)   # 0과 1은 소수가 아님
+for i in range(2, int(max ** 0.5)):
+  if is_prime[i]:
+    for j in range(i * i, max + 1, i):
+      is_prime[j] = False
+number = [i for i, val in enumerate(is_prime) if val] + [0,0]
+L = len(number)
+
+N = int(input())
+
+count = 0
+total = number[0]
+start, end = 0, 0   # 투 포인터
+
+# 슬라이싱 윈도우 기반 탐색
+while end < L - 1:
+  # 부분 합 맞으면 경우의 수 증가 / 투 포인터 모두 += 1
+  if total == N:
+    count += 1
+    end += 1
+    total = total - number[start] + number[end]
+    start += 1
+    
+  # 부분합이 크면 왼쪽 포인터 증가
+  elif total > N:
+    total -= number[start]
+    start += 1
+    
+  # 부분합이 작으면 오른쪽 포인터 증가
+  else:
+    end += 1
+    total += number[end]
+# 출력
+print(count)
+
+
+## 예시 입력 Sample Input
+1001
+
+## 예시 출력 Sample Output
+1
+
+
+## 마무리 Conclusion or Reflection
+난이도 책정이 의심갈정도로 쉬운 문제였다. 소수 리스트 작성에서 고민 한 것을 제외 하고는 거침없이 코드를 작성하였다. 저번 부분합 문제에서 슬라이싱 윈도우라는 개념을 처음 사용해보았는데 사용법이 어렵지 않고
+슬라이싱 윈도우란 단어 자체를 알기 전에도 코딩을 진행하면서 알게모르게 많이 사용 했던것 같아 매끄럽게 진행했다.
+
+Aside from some thought spent on constructing the prime list, the rest of the problem felt straightforward—almost suspiciously easy. 
+I had previously used the sliding window approach for a subarray sum problem, so applying it here felt intuitive and smooth.

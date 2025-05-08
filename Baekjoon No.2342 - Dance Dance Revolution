@@ -1,0 +1,91 @@
+# Baekjoon No.2342 - Dance Dance Revolution
+
+- [문제 링크](https://www.acmicpc.net/problem/2342)
+
+
+## 문제 설명 Problem Description
+발판은 다섯 개의 위치: 중앙(0), 위(1), 왼쪽(2), 아래(3), 오른쪽(4). 시작 시 두 발 모두 0번 위치 (중앙) 입력은 1~4로 이루어진 스텝 순서, 마지막에 0으로 끝남. 두 발이 같은 위치에 있을 수 없음 (단, 시작 시 예외)
+같은 위치를 같은 발로 다시 누를 수 있음
+이동 시 드는 힘:
+같은 위치 → same: 1
+0(중앙) → 다른 지점: 2
+인접 지점 → 이동: 3
+반대 지점 → 이동: 4
+
+주어진 스텝을 순서대로 밟을 때 드는 최소 힘을 계산
+
+The dance pad has 5 positions: Center (0), Up (1), Left (2), Down (3), Right (4). At the beginning, both feet are at position 0 (center). Input: A sequence of steps using numbers 1–4, ending with 0.
+Both feet cannot be on the same position (except at the start). If a foot is already on the required position, it can press it again.
+Energy cost for movement:
+Same position → 1
+From center (0) to another → 2
+Between adjacent directions → 3
+Opposite directions → 4
+
+Calculate the minimum total energy required to follow the given sequence of steps.
+
+
+## 생각 과정 Thought Process
+1. ** DP - 1 **
+문제를 보자마자 이건 DP 로 풀어야 겠다고 생각을 했다. 하지만 DP 점화식을 세우는것이 너무 어려웠다. 그래서 일단 다른 필요한 구조부터 짜기 시작했다.
+
+2. ** 힘 계산 함수 **
+힘 계산 함수는 쉽게 구현 했다. 그냥 케이스 주어진 대로 값을 리턴 하면 되기 때문에 같은 곳을 누를 떄, 0에서 이동할 떄, 반대 지점으로 이동할 떄(abs 사용) 그리고 나머지 케이스로 각 값을 리턴하였다.
+
+3. ** DP - 2 **
+아무리 생각해봐도 DP 테이블 정의와 점화식을 새우기 힘들어서 도움을 받았다. 사실 도움을 받았는데 아이패드로 그림을 그려가며 이해해봐도 조금 어려웠다. 
+처음에 DP 테이블을 3차원으로 해야 될 것 같다고 생각을 하긴 했는데 100,000^3 으로 생각해서 안되겠다고 생각을 했는데 100,000 * 5^2 으로 구현을 했고 dp[a][b][c] 일 때 a는 밟은 순서이고 b 는 왼쪽발, C는 오른쪽 발이다. 
+3중 for 루프에서 다음에 밟아야 할 위치를 가만히 있는 발 위치와 비교하여 같지 않으면 움직이도록 했다.
+
+
+##코드 설명 Code
+
+```python
+# location -> commend 이동 비용
+def calc(location, commend):
+  if location == commend:
+    return 1
+  elif location == 0:
+    return 2
+  elif abs(location - commend) == 2:
+    return 4
+  else:
+    return 3
+
+INF = float("inf")
+
+DDR = list(map(int, input().split()))
+DDR.pop()   # 마지막 "0" 제거
+N = len(DDR)
+dp = [[[INF] * 5 for _ in range(5)] for _ in range(N + 1)]
+dp[0][0][0] = 0   # 시작 비용 0, 발 위치 (0, 0)
+
+for i in range(N):
+  nxt = DDR[i]    # 이동해야 할 발 위치
+  for l in range(5):
+    for r in range(5):
+      # 구성될 수 없는 발 위치
+      if dp[i][l][r] == INF:
+        continue
+      if nxt != r:    # 두 발이 같은 칸에 위치 방지
+        dp[i + 1][nxt][r] = min(dp[i + 1][nxt][r], dp[i][l][r] + calc(l, nxt))    # 왼발 이동
+      if nxt != l:    # 두 발이 같은 칸에 위치 방지
+        dp[i + 1][l][nxt] = min(dp[i + 1][l][nxt], dp[i][l][r] + calc(r, nxt))    # 오른발 이동
+
+result = INF
+for i in range(5):
+  for j in range(5):
+    result = min(dp[N][i][j], result)
+print(result)
+
+
+## 예시 입력 Sample Input
+1 4 2 2 2 3 4 2 0
+
+## 예시 출력 Sample Output
+16
+
+## 마무리 Conclusion or Reflection
+이 문제를 풀면서 나는 DP가 정말 무궁 무진한 난이도를 가지고 있다는 것을 깨달았다. 시간을 좀 들여 생각해봤지만 DP 테이블을 3차원으로 할지, 크기는 어느정도로 할지 부터 막혀서 너무 당황스러웠다.
+보통 문제를 풀때 DP를 사용해야겠다 깨닫는 시간은 얼마 걸리지 않긴 했는데 막상 점화식을 세울 때 좀 걸리긴 했다.
+DP를 몇번 풀어서 이제 좀 풀리나 싶었는데 DP에 대한 부족함을 깨닫게 되는 문제였다.

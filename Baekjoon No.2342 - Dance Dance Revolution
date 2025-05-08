@@ -37,6 +37,18 @@ Calculate the minimum total energy required to follow the given sequence of step
 처음에 DP 테이블을 3차원으로 해야 될 것 같다고 생각을 하긴 했는데 100,000^3 으로 생각해서 안되겠다고 생각을 했는데 100,000 * 5^2 으로 구현을 했고 dp[a][b][c] 일 때 a는 밟은 순서이고 b 는 왼쪽발, C는 오른쪽 발이다. 
 3중 for 루프에서 다음에 밟아야 할 위치를 가만히 있는 발 위치와 비교하여 같지 않으면 움직이도록 했다.
 
+1. ** DP - 1 **
+When I first saw the problem, I immediately thought it should be solved using dynamic programming (DP). 
+However, it was really difficult to come up with the recurrence relation. So I started by implementing other necessary parts of the code first.
+
+2. ** Energy Calculation Function **
+The function to calculate the energy was easy to implement. Based on the given conditions, 
+I simply returned fixed values depending on the case: pressing the same position again, moving from the center, moving to the opposite direction (using abs), and other adjacent moves.
+
+3. ** DP - 2 **
+Even after some thought, defining the DP table and recurrence relation was too hard, so I sought help. Even with visual aids (drawing on my iPad), it was a bit tricky to grasp.
+Initially, I thought the DP table needed to be 3D, but dismissed the idea thinking it would be 100,000^3. Eventually, I implemented it as 100,000 * 5^2, with dp[a][b][c] meaning:
+
 
 ##코드 설명 Code
 
@@ -86,6 +98,11 @@ print(result)
 16
 
 ## 마무리 Conclusion or Reflection
-이 문제를 풀면서 나는 DP가 정말 무궁 무진한 난이도를 가지고 있다는 것을 깨달았다. 시간을 좀 들여 생각해봤지만 DP 테이블을 3차원으로 할지, 크기는 어느정도로 할지 부터 막혀서 너무 당황스러웠다.
-보통 문제를 풀때 DP를 사용해야겠다 깨닫는 시간은 얼마 걸리지 않긴 했는데 막상 점화식을 세울 때 좀 걸리긴 했다.
-DP를 몇번 풀어서 이제 좀 풀리나 싶었는데 DP에 대한 부족함을 깨닫게 되는 문제였다.
+이 문제를 풀면서 **동적 계획법(DP)**이 정말 무궁무진한 난이도를 가질 수 있다는 사실을 깨달았다. 시간을 들여 고민해보았지만, DP 테이블을 3차원으로 구성할지, 크기를 어떻게 설정할지부터 막혀서 많이 당황스러웠다.
+보통 문제를 풀 때 DP를 써야겠다는 판단은 금방 드는 편인데, 실제로 점화식을 세우는 과정에서는 여전히 시간이 많이 걸린다.
+DP 문제를 몇 번 풀면서 이제 좀 익숙해졌다고 생각했는데, 이 문제를 통해 아직도 부족한 점이 많다는 걸 느낄 수 있었다.
+
+While solving this problem, I realized just how vast and complex dynamic programming (DP) can be. 
+I spent quite some time thinking, but I was stuck right from the beginning—unsure whether to use a 3D DP table and how large it should be, which left me feeling overwhelmed.
+Usually, I can quickly recognize when DP is needed in a problem, but coming up with the actual recurrence relation still takes me a lot of time.
+I thought I was getting the hang of DP after solving several problems, but this one made me realize I still have a long way to go.

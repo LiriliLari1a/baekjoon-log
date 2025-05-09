@@ -1,0 +1,75 @@
+# Baekjoon No.2473 - 세 용액
+
+- [문제 링크](https://www.acmicpc.net/problem/2473)
+
+## 문제 설명 Problem Description
+첫째 줄에는 전체 용액의 수 N이 입력된다. N은 3 이상 5,000 이하의 정수이다. 둘째 줄에는 용액의 특성값을 나타내는 N개의 정수가 빈칸을 사이에 두고 주어진다. 
+이 수들은 모두 -1,000,000,000 이상 1,000,000,000 이하이다. N개의 용액들의 특성값은 모두 다르고,첫째 줄에 특성값이 0에 가장 가까운 용액을 만들어내는 세 용액의 특성값을 출력한다. 
+출력해야하는 세 용액은 특성값의 오름차순으로 출력한다. 특성값이 0에 가장 가까운 용액을 만들어내는 경우가 두 개 이상일 경우에는 그 중 아무것이나 하나를 출력한다.
+
+You're given a list of N unique liquid values (where 3 ≤ 𝑁 ≤ 5000, 3 ≤ N ≤ 5000), each between -10^9 and 10^9. 
+Your task is to find three distinct liquids whose combined value is closest to zero and print their values in ascending order.
+
+
+## 생각 과정 Thought Process
+1. ** 정렬 및 투 포인터 - 1 **
+일단은 리스트중 선택 하는 문제이므로 투 포인터를 먼저 떠올렸다. 두 용액의 합이면 좋겠지만 세 용액의 합이라 생각을 조금 더 해보게 되었다.
+처음으로 양수가 등장하는 곳부터(중앙이라고 가정) 연속으로 포인터를 세개를 잡고 왼쪽 인덱스와 오른쪽 인덱스를 조절하며 구현을 처음에 해봤는데 예제 출력이 제대로 되지않았다.
+
+2. ** 정렬 및 투 포인터 - 2 **
+문제를 풀어보면서 뭔가 범위라는 단어에 꽂히게 되었다. 그래서 탐색 범위를 줄일 수 있는 무언가를 찾으려 시도 했다. 결국에는 포인터 하나를 무조건 선택한다 가정해서 범위를 줄이는 방법으로 갔다.
+세 용액의 번호 (i, j, k)를 잡고 i 값이 0 번쨰 부터 N - 2 번째 까지 한번씩 모두 고정한다 생각하고 나머지 두 용액을 투 포인터를 적절히 움직여 구현했다.
+
+1. ** Sorting & Two Pointers - 1 **
+Since this is a problem about choosing elements from a list, I first thought of using the two-pointer approach. While it would be ideal for two elements, 
+since the goal is to find three elements whose sum is closest to zero, I had to reconsider. 
+I initially tried using three pointers starting from the point where positive numbers appear and adjusted the left and right pointers. However, this approach didn’t yield the correct results for the sample cases.
+
+2, ** Sorting & Two Pointers - 2 **
+While solving the problem, I became fixated on the idea of narrowing the "range" of the search. 
+I decided to fix one element and use two pointers for the remaining elements to reduce complexity. Specifically,
+I fixed the first index i from 0 to N - 2, and used two pointers j and k to find the other two elements.
+
+
+##코드 설명 Code
+
+```python
+N = int(input())
+liquid = list(map(int, input().split()))
+liquid.sort()
+
+temp = float("inf")   # 가장 최적 합을 저장
+
+# i, j, k 번째 용액을 선택 했을 떄(i < j < k)
+for i in range(N - 2):
+  j, k = i + 1, N - 1
+  while j < k:
+    total = liquid[i] + liquid[j] + liquid[k]
+    if abs(total) < abs(temp):   # 더 적합한 값을 찾았을때
+      temp = total
+      result = [liquid[i], liquid[j], liquid[k]]
+    if total > 0:
+      k -= 1
+    elif total < 0:
+      j += 1
+    else:   # total == 0
+      result = [liquid[i], liquid[j], liquid[k]]
+      break
+      
+print(" ".join(map(str, result)))
+
+
+## 예시 입력 Sample Input
+6
+-10 0 2 3 4 8
+
+## 예시 출력 Sample Output
+-10 2 8
+
+
+## 마무리 Conclusion or Reflection
+처음에 구현하다 오류가 있었지만 범위라는 것에 고찰을 하면서 문제가 쉬워졌다. 세개의 포인터를 모두 옮기면 힘드니 한개의 포인터를 고정 시켜놓고 나머지 포인터를 옮기면 범위도 줄고 코드도 줄겠구나 하고 생각했다.
+다만 시간복잡도가 괜찮을지 걱정했지만 널널하게 통과했다.
+
+Initially, I encountered some bugs, but focusing on narrowing the search range made the problem clearer. 
+I realized that fixing one pointer and moving the others reduces both the range and the complexity of the code. I was slightly worried about time complexity, but it passed comfortably.

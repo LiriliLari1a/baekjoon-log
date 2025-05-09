@@ -1,0 +1,91 @@
+# Baekjoon No.2623 - 음악프로그램
+
+- [문제 링크](https://www.acmicpc.net/problem/2623)
+
+## 문제 설명 Problem Description
+N명의 가수가 있고, M명의 보조 PD가 일부 가수들의 출연 순서를 정했다. 각 보조 PD는 몇몇 가수들 간의 순서를 리스트로 제공한다. 
+모든 보조 PD의 순서를 만족하는 전체 가수 출연 순서를 출력해야 한다. 가능한 순서가 없으면 0을 출력한다.
+
+Given N singers and M assistant producers, each assistant provides a partial order of singers they manage. 
+Determine a full performance order that satisfies all given partial orders. If it's impossible, output 0.
+
+
+## 생각 과정 Thought Process
+1. ** 위상 정렬 **
+baekjoon - 2252 줄세우기 문제와 똑같은 문제로 보았다. 유방향 그래프로 위상정렬인 것이 보였기 때문이다. 다만 입력 방식이 달라 딕셔너리에 저장하는 과정을 좀 복잡하게 구현했다.
+딕셔너리에 저장하는 과정만 뺴면 기본적인 위상정렬 알고리즘 구조였다. 진입차수를 이용하여 큐에 삽입 하고 결과 리스트를 만들었다.
+순서를 만들기가 불가능하면 0을 출력 해야 하는데 이것은 가수의 수와 결과의 수가 다르면 0을 출력하도록 했다.
+
+1. ** Topological Sort **
+I recognized this problem as essentially the same as Baekjoon 2252 (Line Up), since it's clearly a directed graph problem that requires topological sorting. 
+The main difference was the input format, which made storing the graph in a dictionary a bit more complex.
+Aside from that, I followed the standard topological sort approach: using in-degrees and a queue to build the result list.
+If it's impossible to determine a valid order, I checked whether the number of singers in the result matches the total number; if not, I printed 0.
+
+
+##코드 설명 Code
+
+```python
+from collections import deque
+
+N, M = map(int, input().split())
+
+indegree = [0] * (N + 1)    # 진입 차수
+dict = { i : [] for i in range(1, N + 1) }    # key > value
+rev_dict = { i : [] for i in range(1, N + 1) }    # key < value
+
+for _ in range(M):
+  A = list(map(int, input().split()))
+  for i in range(1, A[0] + 1):    # input 값 하나씩
+    for j in range(i + 1, A[0] + 1):  # 해당 가수보다 후순위인 것들
+      if A[i] not in dict[A[j]]:      # 중복 제거 및 저장
+        rev_dict[A[i]].append(A[j])
+        dict[A[j]].append(A[i])
+        indegree[A[j]] += 1
+
+# 진입 차수 0 인것 큐 삽입
+queue = deque([])
+for i in range(1, N + 1):
+  if indegree[i] == 0:
+    queue.append(i)
+
+# 위상 정렬 실행
+result = []
+while queue:
+  current = queue.popleft()
+  result.append(current)
+  for item in rev_dict[current]:
+    indegree[item] -= 1
+    if indegree[item] == 0:
+      queue.append(item)
+
+if len(result) != N:  # 미완성 종료
+  print(0)
+else:
+  for item in result:
+    print(item)
+
+
+## 예시 입력 Sample Input
+5 7
+5 1 2 3 4 5
+5 1 2 3 4 5
+5 1 2 3 4 5
+5 1 2 3 4 5
+5 1 2 3 4 5
+5 1 2 3 4 5
+5 1 2 3 4 5
+
+## 예시 출력 Sample Output
+1
+2
+3
+4
+5
+
+
+## 마무리 Conclusion or Reflection
+위상정렬이 한눈에 보였고 최근에 위상정렬을 몇번 풀어보아서 30 분 채 안돼서 풀었다. 이제 위상정렬이 내 것이 된 느낌이고 조금 더 복잡한 위상정렬을 사용하는 문제를 다뤄보고 싶다.
+
+The need for topological sorting was immediately clear, and since I had recently solved several similar problems, I was able to solve this one in under 30 minutes. 
+It feels like I’ve finally made topological sort my own. Now, I want to challenge myself with problems that involve more complex uses of topological sorting.

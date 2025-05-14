@@ -1,0 +1,80 @@
+# Baekjoon No.7579 - 앱
+
+- [문제 링크](https://www.acmicpc.net/problem/7579)
+
+## 문제 설명 Problem Description
+스마트폰에서 실행 중인 N개의 앱은 각각 mᵢ 바이트의 메모리를 사용하고 있으며, 이를 비활성화하면 mᵢ만큼의 메모리를 확보할 수 있지만 cᵢ만큼의 비용이 든다. 
+새로운 앱을 실행하기 위해 M 바이트 이상의 메모리를 확보해야 할 때, 현재 활성화된 앱들 중 일부를 비활성화하여 총 확보 메모리 ≥ M이 되도록 하고, 그에 드는 총 비용의 합을 최소화해야 한다.
+N: 앱의 개수 (1 ≤ N ≤ 100)
+M: 확보해야 할 메모리 바이트 수
+mᵢ: i번째 앱이 사용 중인 메모리
+cᵢ: i번째 앱을 비활성화할 때 드는 비용
+조건을 만족하는 비활성화 조합 중 비용의 총합이 가장 작은 값을 출력한다.
+
+On a smartphone, there are N running apps, each consuming a certain amount of memory mᵢ. If an app is deactivated, it frees up mᵢ bytes of memory but incurs a cost cᵢ (e.g., time or resources required to restart it later). 
+To launch a new app, the system must free up at least M bytes of memory. Your task is to determine which apps to deactivate in order to free at least M bytes of memory while minimizing the total deactivation cost.
+N: the number of apps (1 ≤ N ≤ 100)
+M: the required amount of memory to free (in bytes)
+mᵢ: memory used by the i-th app
+cᵢ: cost to deactivate the i-th app
+Print the minimum possible sum of costs to deactivate apps such that the total freed memory is at least M bytes.
+
+
+## 생각 과정 Thought Process
+1. ** 중요도 리스트 **
+오래전에 비슷한 문제에서 시도했던 방법인데 혹시나 가능할까 싶어 중요도(용량 / 비용)라는 개념을 도입하여 풀려고 시도해보았지만 맞지 않는 케이스가 너무 다양해서 구현에 실패했다.
+
+2. ** DP **
+DP를 활용하면 풀수 있는 것을 알고 있었다. 어떻게 구현할지가 문제였다. 처음에는 모든 앱을 끈다 가정하고 끄지 않을 앱을 선택하는 방법으로 접근하였다.
+(N + 1)^2 2차원 행렬을 두개 만들어 하나는 dp로 사용하고 하나는 현재 메모리를 저장하여 가장 많은 비용, 가장 적은 메모리를 구하도록 구현해 보았지만 예상대로 작동하지 않았다.
+계속 이상한 방법으로 붙잡고 있는 것 보단 답을 보는게 나을 것 같아서 답을 보고 분석했다.
+내가 생각했던 것 보단 DP 테이블이 작았다. 최소 2차원 리스트를 활용해야 될 것이라고 생각했는데 비용의 합의 최대 길이의 리스트를 사용하였다(100,000 + 1).
+그리고 다음 DP 를 채워넣는 방식이 조금 낯설었는데 리스트의 인덱스로 그 인덱스(=비용) 이하로 확보 할수 있는 최대 메모리를 구했다.
+"i" 는 각 앱을 모두 순회하고 "j" 는 DP를 순회하며 값을 채워넣었다.
+
+1. ** Importance List Approach **
+I initially attempted to solve the problem using an "importance" metric (memory / cost), a method I had tried in a similar problem long ago. I hoped it might work, 
+but it failed due to the wide variety of edge cases that couldn’t be handled properly.
+
+2. ** DP **
+I knew the problem could be solved with DP, but wasn’t sure how to implement it. At first, I approached it by assuming all apps were deactivated, then trying to selectively choose which ones to keep active. 
+I created two (N+1)²-sized 2D arrays—one for the DP table and one to track memory—for identifying the highest cost and least memory usage, but it didn’t work as expected.
+
+
+##코드 설명 Code
+
+```python
+N, M = map(int, input().split())
+
+m = list(map(int, input().split()))
+c = list(map(int, input().split()))
+dp = [0] * 10001
+
+
+for i in range(N):
+  for j in range(1000, c[i] - 1, -1):   # 오름차순은 중복 발생
+    dp[j] = max(dp[j], dp[j - c[i]] + m[i])
+
+print(dp)
+for i in range(10001):
+  if dp[i] >= M:
+    print(i)
+    break
+
+
+## 예시 입력 Sample Input
+5 60
+30 10 20 35 40
+3 0 3 5 4
+
+## 예시 출력 Sample Output
+[10, 10, 10, 40, 50, 50]
+
+## 마무리 Conclusion or Reflection
+처음 중요도 리스트를 사용할 땐 뭔가 나만의 방식을 사용해보고 싶기도 했고 예전에 같은 방법으로 구현할 때 보단 실력이 늘어 난 것 같아 시도했지만 이방법은 아무래도 사용하지 못하는 방법인것 같다고 생각했다.
+그리고 DP로 구현을 시도해봤는데 완벽하다고 생각했지만 생각대로 잘 작동하지 않았고 아무래도 현재 메모리를 관리하는 부분에서 오류가 나지 않았나 싶다.
+결구에는 정답을 보고 공부를 했지만 조금 아쉬운게 왜 이렇게 앱 개수와 비용값을 작게 설정하고 문제를 주었을까 딱 한번만 생각해봤어도 근접하게 구현할 수 있지 않았을까 하는 아쉬움이있다.
+
+Eventually, I gave up on trial-and-error and checked the solution. I was surprised to find that a simple 1D DP array (size 10,001) was enough, using cost as the index and storing the maximum memory that could be secured.
+At first, I tried using a custom "importance" metric to apply my own ideas, but it didn’t fit this problem. My initial DP approach also had flaws, likely in how memory was tracked. 
+In the end, studying the correct solution helped me understand the right approach. Looking back, I regret not noticing the small input constraints earlier—if I had, I might have realized that a cost-based DP was the intended method.

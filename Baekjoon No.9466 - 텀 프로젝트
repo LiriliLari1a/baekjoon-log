@@ -1,0 +1,96 @@
+# Baekjoon No.9466 - 텀 프로젝트
+
+- [문제 링크](https://www.acmicpc.net/problem/9466)
+
+
+## 문제 설명 Problem Description
+모든 학생은 함께 프로젝트를 하고 싶은 한 명의 학생을 선택한다. 이 선택들을 통해 형성된 **사이클(순환 구조)**만 유효한 팀으로 인정된다. 
+즉, 자기 자신을 선택하거나, 서로를 돌아가며 선택하는 사이클을 이루는 경우만 팀이 된다. 이 조건을 만족하지 않는 학생 수를 구하는 문제이다.
+첫째 줄에 테스트 케이스의 개수 T가 주어진다. 각 테스트 케이스의 첫 줄에는 학생의 수가 정수 n (2 ≤ n ≤ 100,000)으로 주어진다. 각 테스트 케이스의 둘째 줄에는 선택된 학생들의 번호가 주어진다. (모든 학생들은 1부터 n까지 번호가 부여된다.)
+각 테스트 케이스마다 한 줄에 출력하고, 각 줄에는 프로젝트 팀에 속하지 못한 학생들의 수를 나타내면 된다.
+
+Each student selects one other student they want to work with on a project. 
+A valid team is formed only if the selections form a cycle (e.g., a student selects themselves or a group of students select each other in a loop). The goal is to count how many students do not belong to any valid team.
+The first line contains an integer T, the number of test cases.
+For each test case:
+The first line contains an integer n (2 ≤ n ≤ 100,000), the number of students.
+The second line contains n integers, where the i-th number represents the student selected by student i. All students are numbered from 1 to n.
+For each test case, print a single line containing the number of students who do not belong to any project team.
+
+
+## 생각 과정 Thought Process
+1. ** 사이클 **
+문제를 읽자마자 사이클을 감지해야 하는 문제라는 것을 알았다. 그래서 그래프로 입력을 처리하고 깊이우선탐색으로 사이클을 찾아보기로 했다.
+입력에서 주어지는 학생 수가 많아서 많은 최적화 과정을 생각해 내야했다. 처음에는 팀이 결성되면 그 팀에 포함된 사람들만 제외하고 탐색을 시도했는데 시간초과가 나서 아예 방문을 했던 사람이라면 사이클을 찾아 봤다고 생각하고 이사람들 또한 제외했다.
+그렇게 해도 시간초과가 나서 무엇일지 곰곰히 생각해 보다 아무래도 DFS 함수 호출이 많다보니 내부에서 이유가 있을 것이라고 생각하고 중복된 값이 들어가지 않으므로 visited 리스트를 세트로 바꾸었다.
+
+1. ** Cycle Detection **
+As soon as I read the problem, I recognized that it was about detecting cycles. So, I processed the input as a graph and decided to use depth-first search (DFS) to find cycles.
+Because the number of students is large, I had to think carefully about optimization. Initially, I excluded only the students who were already confirmed to be part of a team, but that resulted in a time limit exceeded (TLE). 
+So I changed my approach: if a student had already been visited, I treated them as already processed and skipped them.
+Even then, I got TLE, so I considered that the DFS function might be the cause due to too many calls. I then changed the visited list to a set to reduce overhead, since duplicate values wouldn’t be added anyway.
+
+
+##코드 설명 Code
+
+```python
+def DFS(start, is_team, vis):
+  visited = set()   # 중복 없으므로 해싱 기반 사용
+  stack = [start]
+  while stack:
+    current = stack.pop()
+    if vis[current]:    # 메인에서 방문했던 노드 일 떄
+      break
+    if current not in visited:    # 최초 방문 일 떄
+      visited.add(current)
+      stack.append(graph[current][0])
+    else:               # 사이클 발견
+      while not is_team[current]:
+        is_team[current] = True
+        current = graph[current][0]
+      break
+  return visited
+
+T = int(input())
+
+for _ in range(T):
+  n = int(input())
+  visited = [False] * (n + 1)   # 메인에서 방문 여부 관리
+  is_team = [False] * (n + 1)   # 팀 여부 관리
+  graph = { i : [] for i in range(1, n + 1) }
+  students = list(map(int, input().split()))
+
+  for i in range(len(students)):
+    graph[i + 1].append(students[i])
+
+  for i in range(1, n + 1):
+    if visited[i]:  # 방문했던 노드 일 때
+      continue
+    V = DFS(i, is_team, visited)
+    for item in V:  # 방문 여부 추가
+      visited[item] = True
+
+  count = 0
+  for i in range(1, n + 1):
+    if not is_team[i]:
+      count += 1
+  print(count)
+
+
+## 예시 입력 Sample Input
+2
+5
+2 3 1 1 1
+5
+5 5 4 5 3
+
+## 예시 출력 Sample Output
+2
+2
+
+
+## 마무리 Conclusion or Reflection
+문제 자체는 어렵지 않았다. DFS로 사이클 감지를 해서 팀 구성에 추가하는 방식이라는 아주 간단한 알고리즘이었는데 시간초과에 걸리지 않게끔 적당한 부분에서 두번씩 돌지않도록 끊어주는 것에서 조금 고민했다.
+
+The problem itself wasn't difficult. It was a straightforward algorithm where I used DFS to detect cycles and add members to a team accordingly. 
+The main challenge was avoiding time limit exceeded errors by ensuring that I didn’t traverse the same paths more than once. I had to think carefully about where to break the recursion to prevent redundant operations.

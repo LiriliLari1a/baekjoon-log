@@ -1,0 +1,87 @@
+# Baekjoon No.11049 - 행렬 곱셈 순서
+
+- [문제 링크](https://www.acmicpc.net/problem/11049)
+
+
+## 문제 설명 Problem Description
+첫째 줄에 행렬의 개수 N(1 ≤ N ≤ 500)이 주어진다.
+둘째 줄부터 N개 줄에는 행렬의 크기 r과 c가 주어진다. (1 ≤ r, c ≤ 500)
+항상 순서대로 곱셈을 할 수 있는 크기만 입력으로 주어진다.
+첫째 줄에 입력으로 주어진 행렬을 곱하는데 필요한 곱셈 연산의 최솟값을 출력한다.
+
+The first line contains an integer N (1 ≤ N ≤ 500), the number of matrices.
+From the second line, each of the next N lines contains two integers r and c — the number of rows and columns of each matrix, respectively. (1 ≤ r, c ≤ 500)
+It is guaranteed that the matrix dimensions are such that they can be multiplied in the given order.
+Print a single line containing the minimum number of scalar multiplications needed to multiply the given sequence of matrices.
+
+
+## 생각 과정 Thought Process
+1. ** 입력값 전처리 **
+아이패드에 입력값을 적어보며 생각을 했는데 어짜피 n번째의 행의 개수와 n+1 번째의 열의 개수가 같다는 점을 이용해 행렬의 정보를 모두 저장해 2차원으로 보는 것 보다 필요한 값만 추출해 리스트로 보는 것이 바람직하다고 보았다.
+그래서 입력을 처리하는 부분에서 필요한 부분만 추출하여 버렸고 이렇게 입력을 처리하고 보니 조금더 규칙성이 돋보여 어떻게 풀지 관찰하는 것이 쉬워졌다.
+
+2. ** DP **
+입력값을 전처리한 결과를 보고 DP로 해결해야겠다는 생각을 했다. 하지만 점화식이 세우기가 어려워 도움을 받아 작성했다.
+
+1. ** Input Preprocessing **
+While jotting down the input on my iPad, I realized that since the number of columns of the n-th matrix is equal to the number of rows of the (n+1)-th matrix, 
+it’s more efficient to extract only the necessary values into a list rather than storing the entire matrix information in a 2D structure. By processing the input this way, 
+I was able to observe the problem's structure more clearly, which made it easier to think about how to approach it.
+
+2. ** DP **
+After preprocessing the input, I decided that DP would be the best approach to solve the problem. However, 
+I struggled to come up with the recurrence relation on my own and had to get help to complete the solution.
+
+
+
+##코드 설명 Code
+
+```python
+INF = float("inf")
+
+N = int(input())
+Mat = []
+
+# 입력값 전처리
+A, B = map(int,input().split())
+Mat.append(A)
+Mat.append(B)
+for _ in range(N - 1):
+  A, B = map(int, input().split())
+  Mat.append(B)
+L = len(Mat) - 1
+
+dp = [[INF] * (L + 1) for _ in range(L + 1)]
+
+# i ~ i 까지의 곱은 0
+for i in range(L + 1):
+  dp[i][i] = 0
+
+for l in range(2, L + 1):   # 행렬의 개수 설정
+  for i in range(1, L - l + 2):   # i 부터
+    j = i + l - 1                 # j 까지
+    for k in range(i, j):         # 곱셈 그룹 설정
+      cost = dp[i][k] + dp[k + 1][j] + Mat[i - 1] * Mat[k] * Mat[j]
+      dp[i][j] = min(dp[i][j], cost)
+for i in range(L + 1):
+  print(dp[i])
+
+print(dp[1][L])
+
+
+
+## 예시 입력 Sample Input
+3
+1 2
+2 3
+3 4
+
+## 예시 출력 Sample Output
+18
+
+
+## 마무리 Conclusion or Reflection
+DP 에 대한 많은 부족함을 느끼게 한 문제였다. 아직 DP를 풀기위한 전처리 또는 DP로 풀어야 겠다는 생각까지는 도달하지만 점화식을 세우거나 테이블의 크기를 정하는 등의 어려움은 생각을 열심히 해봐도 아직 해결하기 어려운 것 같다.
+
+This problem made me realize how much I still lack in understanding DP. Although I’m able to identify that a problem can be solved with DP and handle the preprocessing part,
+I still find it difficult to construct the recurrence relation or determine the size of the DP table. Even after thinking hard, these parts remain challenging for me.

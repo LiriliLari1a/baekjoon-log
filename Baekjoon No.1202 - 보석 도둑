@@ -1,0 +1,105 @@
+# Baekjoon No.1202 - 보석 도둑
+
+- [문제 링크](https://www.acmicpc.net/problem/1202)
+
+
+## 문제 설명 Problem Description
+세계적인 도둑 상덕이는 보석점을 털기로 결심했다.
+상덕이가 털 보석점에는 보석이 총 N개 있다. 각 보석은 무게 Mi와 가격 Vi를 가지고 있다. 상덕이는 가방을 K개 가지고 있고, 각 가방에 담을 수 있는 최대 무게는 Ci이다. 가방에는 최대 한 개의 보석만 넣을 수 있다.
+상덕이가 훔칠 수 있는 보석의 최대 가격을 구하는 프로그램을 작성하시오.
+
+입력
+첫째 줄에 N과 K가 주어진다. (1 ≤ N, K ≤ 300,000)
+다음 N개 줄에는 각 보석의 정보 Mi와 Vi가 주어진다. (0 ≤ Mi, Vi ≤ 1,000,000)
+다음 K개 줄에는 가방에 담을 수 있는 최대 무게 Ci가 주어진다. (1 ≤ Ci ≤ 100,000,000)
+모든 숫자는 양의 정수이다.
+
+출력
+첫째 줄에 상덕이가 훔칠 수 있는 보석 가격의 합의 최댓값을 출력한다.
+
+Sangdeok, a world-class thief, has decided to rob a jewelry store. The store contains N jewels, each with a weight Mi and a value Vi. Sangdeok also has K bags, and each bag can carry a jewel with a maximum weight capacity of Ci.
+Each bag can hold at most one jewel.
+Your task is to determine the maximum total value of jewels Sangdeok can steal by placing at most one jewel in each bag.
+
+Input
+First line: Two integers N and K (1 ≤ N, K ≤ 300,000)
+Next N lines: Each line has two integers Mi and Vi (0 ≤ Mi, Vi ≤ 1,000,000) — the weight and value of a jewel
+Next K lines: Each line has an integer Ci (1 ≤ Ci ≤ 100,000,000) — the maximum weight capacity of each bag
+
+Output
+A single integer: The maximum total value of the jewels Sangdeok can steal
+
+
+## 생각 과정 Thought Process
+1. ** 이진 탐색 **
+처음에는 DP인가 싶었지만 그리디 알고리즘으로도 충분히 풀릴 것같아서 가방을 무게를 기준으로 오름차순 정렬, 보석을 가치를 기준으로 내림차순 정렬 후 가장 가치가 높은 보석부터 넣을수 있는 가장 작은 가방에 넣도록 하였다.
+가장 작은 가방을 찾는 과정에서 이진 탐색을 진행했고 예제 출력이 정답으로 나오길래 제출했으나 시간초과가 났다. 그리고 이 알고리즘은 100% 정답을 도출한다는 보장을 못하겠다.
+
+2. ** 힙큐 **
+이진 탐색으로 직접 구현을 진행하면서 무언가 자동으로 정렬해주거나 관리해주는 강력한 도구가 필요하단것을 깨달았다. 그래서 처음에 큐를 사용하려다가 가치를 이용하는 강력한 도구인 힙큐를 사용하기로 했다.
+가방과 보석을 관리하는 방법이 좀 바뀌었는데 가장 작은 가방부터 가장 가치가 높은 보석을 꺼내게 해야 힙큐가 정상적으로 작동한다는 것을 알았다.
+
+1. ** Binary Search Approach **
+At first, I thought this might be a dynamic programming problem, but it seemed solvable with a greedy algorithm. So, I sorted the bags in ascending order by weight and the jewels in descending order by value. 
+Then, I tried placing the most valuable jewel into the smallest bag it could fit using binary search.
+Although the example outputs were correct, the solution resulted in a time limit exceeded (TLE) on submission. Additionally, I realized this approach does not always guarantee the optimal answer.
+
+2. ** Heap Queue (Heapq) Approach **
+While implementing the binary search method, I felt the need for a powerful tool to manage sorting and selection automatically. Initially, I considered using a queue, but I realized that a heap (priority queue) would be more effective, especially when dealing with jewel values.
+I changed my strategy: by processing the bags in ascending order of capacity, I ensured that the most valuable available jewel could be efficiently selected using a max-heap. This allowed the heap to function correctly and produce an optimal result.
+
+
+##코드 설명 Code
+
+```python
+import heapq
+
+N, K = map(int, input().split())
+
+jewelry = []
+for _ in range(N):
+  jewelry.append(list(map(int, input().split())))
+
+bags = []
+
+for _ in range(K):
+  bags.append(int(input()))
+
+# 보석과 가방 무게 기준 오름차순 정렬
+jewelry.sort()
+bags.sort()
+
+result = 0
+heap = []
+ind = 0   # 인덱스 관리 변수
+for bag in bags:
+  while ind < N and jewelry[ind][0] <= bag:
+    # 가치 내림차순으로 heap 사용
+    heapq.heappush(heap, -jewelry[ind][1])
+    ind += 1
+  if heap:
+    result -= heapq.heappop(heap)
+
+print(result)
+
+
+## 예시 입력 Sample Input
+3 4
+1 65
+5 23
+2 99
+10
+2
+3
+5
+
+## 예시 출력 Sample Output
+187
+
+
+## 마무리 Conclusion or Reflection
+DP -> 그리디 -> 큐 -> 힙큐+그리디 이렇게 다양한 방법을 시도해본 문제였다. 문제 자체는 어렵지 않았는데 시간초과에서 조금 애를 썼다. 오랜만에 힙큐를 써보니 조금 두렵긴 했는데 기본적인 사용이라 큰 문제는 없었다.
+
+This problem led me through several different approaches: from dynamic programming (DP) to greedy, then to queue, and finally to a combination of heap queue (heapq) and greedy. 
+The problem itself wasn’t particularly difficult, but I struggled a bit with time limit issues.
+It had been a while since I last used a heap queue, so I was a bit hesitant at first, but since it involved basic usage, it wasn't too challenging in the end.

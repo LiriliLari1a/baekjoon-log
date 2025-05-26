@@ -1,0 +1,109 @@
+# Baekjoon No.7453 - 합이 0인 네 정수
+
+- [문제 링크](https://www.acmicpc.net/problem/7453)
+
+## 문제 설명 Problem Description
+정수로 이루어진 크기가 같은 배열 A, B, C, D가 있다.
+A[a], B[b], C[c], D[d]의 합이 0인 (a, b, c, d) 쌍의 개수를 구하는 프로그램을 작성하시오.
+첫째 줄에 배열의 크기 n (1 ≤ n ≤ 4000)이 주어진다. 다음 n개 줄에는 A, B, C, D에 포함되는 정수가 공백으로 구분되어져서 주어진다. 배열에 들어있는 정수의 절댓값은 최대 2^28이다.
+합이 0이 되는 쌍의 개수를 출력한다.
+
+You are given four arrays A, B, C, and D of equal length, each consisting of integers.
+Your task is to count the number of quadruples (a,b,c,d) such that:
+The first line contains an integer n(1≤n≤4000), the size of each array.
+The next n lines each contain four integers, representing the elements of arrays A, B, C, and D respectively (one tuple per line).
+Each integer in the arrays has an absolute value of at most 2^28
+Print a single integer: the number of quadruples (a,b,c,d) such that the sum A[a]+B[b]+C[c]+D[d] equals zero.
+
+
+## 생각 과정 Thought Process
+1. ** 전처리 **
+일단 수열 A, B, C, D 모두 돌아가며 합을 찾기에는 어려워 보였다. 이 구조를 조금 바꿔서 시간제한 안에 모두 들어올수 있도록 데이터를 전처리 하는것이 가장 먼저 처리해야 할 일이라고 생각했다.
+처음에는 이중 for 문으로 C와 D 값을 고정시킨 후 A,B 값을 투포인터로 찾아 구현하려고 했는데 시간복잡도가 O(N^3) 으로 너무 커서 구현하지 않았다.
+그래서 문제를 읽다가 배열의 크기가 생각보다 작다는 걸 보고 O(N^2) 안으로 해결할 방안을 찾다가 네가지의 배열을 두 배열로 만들어 투 포인터를 사용하면 되겠다는 생각을 하였다.
+
+2. ** 투 포인터 **
+투 포인터 구현은 어렵지 않지만 중복되는 수가 있을 수 있어 중복처리에 조금 신경을 썼다. 합이 0일 때 중복이 끝나고 다른값이 등장할때까지 start 와 end 값을 옮기고 이 변화량을 서로 곱하면 그 중복으로 인한 경우의 수가 모두 구해진다.
+예를 들어 
+[-2, -1, -1, 0, 3] = P
+[-4, -4, 1, 1, 9]   = Q
+일때 start가 P[1], end 가 P[3]을 가리킬 때 합은 0이므로 start는 다음 다른 값 P[3]까지 두번 움직이고 end도 다음 다른 값 P[1]까지 두번 움직이므로 2 * 2 = 4 로 경우의 수가 구해진다.
+(P[1] + Q[2]), (P[1] + Q[3]), (P[2] + Q[2]), (P[2] + Q[3]) => 4개
+
+1. ** Preprocessing **
+At first, it seemed too inefficient to check all combinations from arrays A, B, C, and D directly. So the first step was to preprocess the data in a way that reduces the overall time complexity.
+Initially, I thought about fixing values from C and D using a nested loop, and then using two pointers to find matching values from A and B. 
+But this would result in a time complexity of O(N^3), which is too high, so I didn’t go with that approach.
+While reading the problem again, I noticed that the array size was smaller than expected, so I looked for a solution that works in O(N^2).
+I came up with the idea of splitting the four arrays into two groups and using two-pointer technique on those.
+
+2. ** Two Pointers **
+The two-pointer implementation itself wasn’t too difficult, but I had to be careful about handling duplicates. When the sum is zero, 
+I keep moving the pointers until different values appear, and multiply the number of times each value repeats to count all combinations.
+For example,
+P = [-2, -1, -1, 0, 3]
+Q = [-4, -4, 1, 1, 9]
+If the sum is zero at P[1] and Q[2], I move the start pointer forward until the next different value in P (from -1 to 0), and do the same for Q. If both values appear twice, then the number of combinations is 2 * 2 = 4.
+That gives us:
+(P[1] + Q[2]), (P[1] + Q[3]), (P[2] + Q[2]), (P[2] + Q[3]) — 4 total.
+
+
+##코드 설명 Code
+
+```python
+n = int(input())
+N = n ** 2
+
+A, B, C, D = [0] * n, [0] * n, [0] * n, [0] * n
+
+# 입력 처리
+for i in range(n):
+  a, b, c, d = map(int, input().split())
+  A[i], B[i], C[i], D[i] = a, b, c, d
+
+# A + B = P / C + D = Q 합치기
+P, Q = [0] * N, [0] * N
+for i in range(n):
+  for j in range(n):
+    P[i * n + j] = A[i] + B[j]
+    Q[i * n + j] = C[i] + D[j]
+# 정렬
+P.sort()
+Q.sort()
+
+# 투 포인터를 이용한 합 0 찾기
+count = 0
+start, end = 0, N - 1
+while start < N and end >= 0:
+  current = P[start] + Q[end]   # 합
+  if current == 0:              # 합이 0 일 떄
+    # 중복 수가 있을수 있으므로 찾은 후 계산
+    p, q = start, end
+    while start < N and P[p] == P[start] :
+      start += 1
+    while end >= 0 and Q[q] == Q[end]:
+      end -= 1
+    count += (start - p) * (q - end)    # 변화량 곱 = 경우의 수
+  elif current < 0:             # 합이 0보다 작을 떄
+    start += 1
+  else:                         # 합이 0보다 클 떄
+    end -= 1
+
+print(count)
+
+
+## 예시 입력 Sample Input
+2
+-2 -1 0 1
+-1 0 1 2
+
+## 예시 출력 Sample Output
+6
+
+
+## 마무리 Conclusion or Reflection
+정답률이 약 23퍼로 상당히 정답률이 낮은 문제여서 조금 무섭긴 했는데 전혀 어렵지 않았다. 생각을 조금 해보고 어떤식으로 수열을 처리 할 것인가 라는 생각을 조금만 해도 정답이 쉽게 나오는 문제였다.
+중복 처리는 조금 복잡해 보이는 감이 있다.
+
+Although the problem has a low correct answer rate (about 23%), it wasn’t that hard. 
+With a bit of thought on how to process the sequences efficiently, the answer comes out quite naturally. The handling of duplicates might look slightly tricky, but it's manageable.

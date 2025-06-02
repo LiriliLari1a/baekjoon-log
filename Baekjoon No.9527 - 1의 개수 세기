@@ -63,6 +63,8 @@ So, I narrowed down the range using recursion until the size was less than 8, an
 ##코드 설명 Code
 
 ```python
+# 입력 범위 [0, 2 ^ MAX_bit)
+MAX_bit = 55
 # 2의 제곱 주기로 나타나는 사이클로 재귀 사용
 # offset : 범위, count : 좌측에 붙어 있는 1 개수
 def exp_cycle(offset, count):
@@ -74,57 +76,61 @@ def exp_cycle(offset, count):
   total = perfix[bit_range-1] + count * (2 ** bit_range)    # 1의 개수 리턴
   return total, remain
 
+# 주어진 숫자 N에 대해 해당하는 2의 제곱수 구간의 지수 값 구하기
+def get_exponent(N):
+  exp = 0
+  while N >= 2 ** (exp + 1):
+    exp += 1
+  return exp
+
 # ones[n]에서 2^n ~ 2^(n + 1) - 1 까지의 1의 개수를 구함 (점화식을 이용)
-# perfix 에서 누적합을 구함
-ones = [0] * 55
-perfix = [0] * 55
-perfix[0] = 1
+ones = [0] * MAX_bit
 ones[0], ones[1] = 1, 1
-for i in range(2, 55):
+for i in range(2, MAX_bit):
   ones[i] = ones[i - 1] * 2 + 2 ** (i - 1)
-for i in range(1, 55):
+for i in range(1, MAX_bit):
   ones[i] += 2 ** i
-for i in range(1, 55):
+
+# perfix 에서 누적합을 구함
+perfix = [0] * MAX_bit
+perfix[0] = 1
+for i in range(1, MAX_bit):
   perfix[i] = perfix[i - 1] + ones[i]
 
 A, B = map(int, input().split())
-a, b = 0, 0
 
-# 2^a <= A < 2^(a+1), 2^b <= B 2^(b+1) 만족하도록 a, b 를 구함
-while A >= 2 ** (a + 1):
-  a += 1
-while B >= 2 ** (b + 1):
-  b += 1
+# A와 B의 지수 범위 확인
+exp_A = get_exponent(A)
+exp_B = get_exponent(B)
 
 # [A <= 중간 구간 < B] 1의 개수 통째로 더하기
 result = 0
-for i in range(a, b):
+for i in range(exp_A, exp_B):
   result += ones[i]
 
 # A, B가 포함된 부분의 시작점에서 상대 위치 계산
-offset_a, offset_b = A - 2 ** a, B - 2 ** b + 1
+offset_a, offset_b = A - 2 ** exp_A, B - 2 ** exp_B + 1
 
 count = 1   # 1000...000 <- 좌측 1의 개수 1개
 # A쪽 잔여 계산
-while offset_a > 8:
+while offset_a > 4:
   total, offset_a  = exp_cycle(offset_a, count)
   count += 1
   result -= total
 
-# 8개 이하의 나머지는 직접 계산
-cycle = [0, 1, 1, 2, 1, 2, 2, 3]
+# 4개 이하의 나머지는 직접 계산
 for i in range(offset_a):
-  result -= (count + cycle[i])
+  result -= (count + bin(i).count('1'))
 
 # B쪽 잔여 계산
 count = 1
-while offset_b > 8:
+while offset_b > 4:
   total, offset_b = exp_cycle(offset_b, count)
   count += 1
   result += total
 
 for i in range(offset_b):
-  result += (count + cycle[i])
+  result += (count + bin(i).count('1'))
 
 print(result)
 

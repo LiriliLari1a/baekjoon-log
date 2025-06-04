@@ -1,0 +1,83 @@
+# Baekjoon No.10775 - 공항
+
+- [문제 링크](https://www.acmicpc.net/problem/10775)
+
+
+## 문제 설명 Problem Description
+G개의 게이트가 있으며 1에서 G 까지의 번호를 가지고 있다. 
+항에는 P개의 비행기가 순서대로 도착할 예정이며, 당신은 i번째 비행기를 1번부터 gi (1 ≤ gi ≤ G) 번째 게이트중 하나에 영구적으로 도킹하려 한다. 
+비행기가 어느 게이트에도 도킹할 수 없다면 공항이 폐쇄되고, 이후 어떤 비행기도 도착할 수 없다.
+첫 번째 줄에는 게이트의 수 G (1 ≤ G ≤ 10^5)가 주어진다.
+두 번째 줄에는 비행기의 수 P (1 ≤ P ≤ 10^5)가 주어진다.
+이후 P개의 줄에 gi (1 ≤ gi ≤ G) 가 주어진다.
+도킹시킬 수 있는 최대의 비행기 수를 출력한다.
+
+There are G gates at the airport, numbered from 1 to G.
+There are P airplanes scheduled to arrive in order.
+For each airplane i, you are given a value gi, which means the plane can dock at any one gate from 1 to gi (inclusive).
+Each gate can be used by only one airplane, and once a plane is docked, it cannot be moved.
+If an arriving airplane cannot be docked to any available gate within its allowed range, the airport closes immediately, and no more airplanes can dock thereafter.
+The first line contains an integer G — the number of gates (1 ≤ G ≤ 100,000).
+The second line contains an integer P — the number of airplanes (1 ≤ P ≤ 100,000).
+The next P lines each contain an integer gi (1 ≤ gi ≤ G), indicating the highest-numbered gate the i-th airplane can dock at (i.e., it can dock at gates 1 to gi).
+Print the maximum number of airplanes that can be successfully docked before the airport closes.
+
+
+## 생각 과정 Thought Process
+1. ** 유니온 파인드 **
+일반적으로 브루트포스로 탐색하며 풀면 O(n^2) 이므로 풀수없다. 비행기를 도킹시킬때 가능 한 가장 큰 번호의 게이트를 넣어야 한다. 유니온 파인드를 사용하기로 했다.
+유니온 파인드의 가장 기본적인 구조로 count 변수로 횟수만 세주면 풀수 있으므로 어렵지 않게 풀었다.
+
+1. ** Union-Find **
+A brute-force approach would take O(n²) time, which is not feasible for this problem. Since we must dock each airplane at the highest possible numbered gate, I decided to use the Union-Find data structure.
+By using the most basic structure of Union-Find and simply maintaining a count variable to track the number of docked airplanes, the problem was manageable.
+
+##코드 설명 Code
+
+```python
+# 대표자 찾기
+def find(x):
+  if parent[x] != x:
+    parent[x] = find(parent[x])
+  return parent[x]
+
+# 대표자 변경
+def union(x, y):
+  parent[find(x)] = find(y)
+
+G = int(input())
+P = int(input())
+planes = [int(input()) for _ in range(P)]
+
+parent = [i for i in range(G + 1)]
+
+count = 0
+for plane in planes:
+  gate = find(plane)
+  if gate == 0:
+    break
+  union(gate, gate - 1)
+  count += 1  # 도킹 성공
+print(count)
+
+
+## 예시 입력 Sample Input
+4
+6
+2
+2
+3
+3
+4
+4
+
+## 예시 출력 Sample Output
+3
+
+
+## 마무리 Conclusion or Reflection
+유니온 파인드를 사용하는데에 크게 익숙하진 않아서 조금 도움을 받았다. 어려운 개념은 아니라 금방 이해했다. 
+도킹이라는 단어나 사용할수 있는 가장 큰 수의 게이트 즉, 대표자를 사용하는 거나 유니온 파인드를 사용 할 수 있는 힌트가 많이 주어진 문제다.
+
+I wasn't very familiar with Union-Find at first, so I got a bit of help. However, it's not a difficult concept, and I was able to understand it quickly.
+The use of terms like "docking" and the idea of using the largest available gate, i.e., using representatives, gave strong hints that Union-Find would be suitable for solving this problem.

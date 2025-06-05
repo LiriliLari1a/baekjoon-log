@@ -1,0 +1,158 @@
+# Baekjoon No.16946 - 벽 부수고 이동하기 4
+
+- [문제 링크](https://www.acmicpc.net/problem/16946)
+
+
+## 문제 설명 Problem Description
+N×M의 행렬로 표현되는 맵이 있다. 맵에서 0은 이동할 수 있는 곳을 나타내고, 1은 이동할 수 없는 벽이 있는 곳을 나타낸다. 한 칸에서 다른 칸으로 이동하려면, 두 칸이 인접해야 한다. 두 칸이 변을 공유할 때, 인접하다고 한다.
+각각의 벽에 대해서 다음을 구해보려고 한다.
+벽을 부수고 이동할 수 있는 곳으로 변경한다.
+그 위치에서 이동할 수 있는 칸의 개수를 세어본다.
+한 칸에서 이동할 수 있는 칸은 상하좌우로 인접한 칸이다.
+입력:
+첫째 줄에 N(1 ≤ N ≤ 1,000), M(1 ≤ M ≤ 1,000)이 주어진다. 다음 N개의 줄에 M개의 숫자로 맵이 주어진다.
+출력:
+맵의 형태로 정답을 출력한다. 원래 빈 칸인 곳은 0을 출력하고, 벽인 곳은 이동할 수 있는 칸의 개수를 10으로 나눈 나머지를 출력한다.
+
+You are given a map represented by an N×M matrix. In this map:
+A cell with 0 represents an open space that you can move into.
+A cell with 1 represents a wall that cannot be passed through.
+To move from one cell to another, the two cells must be adjacent—meaning they share a side (up, down, left, or right).
+For each wall cell, calculate the number of open cells that would be reachable if that wall were removed and replaced with an open cell.
+Note: From any cell, you can move to adjacent open cells (up, down, left, right).
+Input
+The first line contains two integers, N and M (1 ≤ N ≤ 1,000), the number of rows and columns of the map.
+Each of the next N lines contains M digits (0 or 1) without spaces, representing the map.
+Output
+Print the result as a grid of size N × M.
+For each original wall cell (1), output the number of reachable open cells (if the wall were removed), modulo 10.
+For each original open cell (0), output 0.
+Each line of the output should contain M digits without spaces.
+
+
+## 생각 과정 Thought Process
+1. ** BFS 사용 방법 **
+일단 너비우선탐색으로 이동할수 있는 개수를 찾는 방법이 핵심인 문제인 것 같았다. 그냥 벽을 제거하고 그 위치에서 그때마다 너비우선탐색을 실시하면 분명히 시간초과가 날것이므로 다른방법을 생각해 보았다.
+그래서 BFS를 일단 벽이 없는 모든곳을 탐색한 후에 벽과 인접한 벽이 없는 곳의 빈칸 개수를 더하는 방식으로 해결해 나가기로 했다.
+그러기 위해선 그 벽의 상하좌우에서 총 빈칸의 개수를 저장해둔 리스트를 다 더한 후 중복이 있을 수 있으므로 이것도 해결해야한다.
+그래서 빈칸의 집합을 그룹으로 이름을 지정하고 상하좌우의 그룹을 더하되 set 를 사용하여 중복을 제거하여 결과에 반영했다.
+
+2. ** 메모리 초과 **
+위의 방법을 사용했는데 메모리 초과가 나서 조금 당황했다. 여러 변수와 리스트를 최적해봐도 해결되지 않길래 BFS 문제인 듯 싶어 개선했다.
+사유는 이제 BFS 작동시 상하좌우의 좌표를 queue에 추가하는데 중복추가를 방지하지 못해서 일어났던 것이다.
+상하좌우의 좌표를 미리 체크해서 이를 방지하는데에 성공했다.
+
+1. How I Used BFS
+This problem seemed to hinge on finding how many empty spaces are reachable using breadth-first search (BFS). 
+If I were to break each wall one by one and run BFS every time, it would clearly result in a time limit exceeded error. So, I thought of a different approach.
+Instead, I decided to first run BFS on all non-wall (empty) areas to group connected regions. Then, for each wall, I would sum the sizes of adjacent empty regions.
+However, since the same group might appear more than once around a wall, I needed a way to avoid double-counting.
+To solve this, I assigned a unique group number to each connected area of empty cells and stored the size of each group. 
+When calculating the result for a wall, I used a set to store adjacent group numbers, which allowed me to avoid counting duplicates.
+
+2. Memory Limit Exceeded
+Although I applied the above method, I still encountered a memory limit exceeded error, which caught me off guard. I tried optimizing various variables and lists, 
+but the issue persisted—so I suspected the problem was in the BFS implementation.
+As it turns out, the error was due to not preventing duplicate entries in the BFS queue. When checking neighboring cells during BFS, 
+I wasn’t marking them as visited before enqueuing them, so the same positions kept getting added repeatedly.
+After fixing this by checking and marking positions before adding them to the queue, I was finally able to avoid the memory overflow.
+
+
+##코드 설명 Code
+
+```python
+from collections import deque
+
+# 이동 가능 방향
+directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+
+# 너비우선탐색
+def BFS(start, grouped, count):
+  result = []
+  queue = deque([start])
+  x, y = start
+  grouped[x][y] = count
+  result.append((x, y))
+  
+  while queue:
+    x, y = queue.popleft()
+    for dx, dy in directions:
+      nx, ny = x + dx, y + dy
+      if 0 <= nx < N and 0 <= ny < M:
+        if matrix[nx][ny] == 1 or grouped[nx][ny] > 0:
+          continue
+        grouped[nx][ny] = count
+        queue.append((nx, ny))
+        result.append((nx, ny))
+  return result
+
+N, M = map(int, input().split())
+matrix = []
+
+# grouped[x][y] -> 같은 수는 같은 그룹 (이동가능한 그룹)
+grouped = [[0] * M for _ in range(N)]
+
+# movable[grouped[x][y]] -> 해당 그룹의 총개수
+movable = [0]
+
+for i in range(N):
+  matrix.append(list(map(int, input().strip())))
+
+# count 변수로 같은 그룹인지 분류
+count = 0
+for i in range(N):
+  for j in range(M):
+    if matrix[i][j] == 0 and grouped[i][j] == 0:
+      count += 1
+      visited = BFS((i, j), grouped, count)
+      # 그룹의 총 개수 저장
+      movable.append(len(visited) % 10)
+
+result = [[0] * M for _ in range(N)]
+for i in range(N):
+  for j in range(M):
+    if matrix[i][j] == 1:
+      result[i][j] += 1
+      temp = set()    # 같은 그룹 중복 저장 방지위해 set 사용
+
+      for di, dj in directions:
+        ni, nj = i + di, j + dj
+        if 0 <= ni < N and 0 <= nj < M:
+          group_number = grouped[ni][nj]    # 속한 그룹
+          if matrix[ni][nj] == 1:
+            continue
+          temp.add(group_number)    # 속한 그룹 저장
+
+      # 중복이 제거된 그룹들을 결과에 저장
+      for number in temp:
+        result[i][j] += (movable[number])
+      result[i][j] = result[i][j] % 10
+
+# 출력
+for i in range(N):
+  for j in range(M):
+    print(result[i][j], end = "")
+  print("")
+
+
+## 예시 입력 Sample Input
+4 5
+11001
+00111
+01010
+10101
+
+## 예시 출력 Sample Output
+46003
+00732
+06040
+50403
+
+
+## 마무리 Conclusion or Reflection
+시간초과도 나도 메모리초과도 나고 머리가 꽤 아픈 문제였다. BFS 탐색을 하는 횟수를 줄이는데에 포인트를 둬서 그렇게만 하면 바로 풀릴줄 알았는데 작은 실수로 조금 헤멘 문제였다.
+앞으로 directions를 이용해 상하좌우 또는 좌표이동을 하여 추가할때 조심해야 할 부분인 것 같다. 
+
+This problem gave me quite a headache—it caused both time limit exceeded and memory limit exceeded errors. 
+I focused on reducing the number of BFS traversals, thinking that would be enough to solve it quickly. But due to a small mistake, I ended up struggling more than expected.
+This was a good reminder that whenever I use directions to move in four directions or handle coordinate shifts, I need to be extra careful when adding new positions, especially in BFS.

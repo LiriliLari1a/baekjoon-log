@@ -1,0 +1,73 @@
+# Baekjoon No.1106 - 호텔
+
+- [문제 링크](https://www.acmicpc.net/problem/1106)
+
+## 문제 설명 Problem Description
+홍보를 할 수 있는 도시가 주어지고, 각 도시별로 홍보하는데 드는 비용과, 그 때 몇 명의 호텔 고객이 늘어나는지에 대한 정보가 있다. 정보에 나타난 돈에 정수배 만큼을 투자할 수 있다.
+호텔의 고객을 적어도 C명 늘이기 위해 형택이가 투자해야 하는 돈의 최솟값을 구하는 프로그램을 작성하시오.
+첫째 줄에 C와 형택이가 홍보할 수 있는 도시의 개수 N이 주어진다. C는 1,000보다 작거나 같은 자연수이고, N은 20보다 작거나 같은 자연수이다. 
+둘째 줄부터 N개의 줄에는 각 도시에서 홍보할 때 대는 비용과 그 비용으로 얻을 수 있는 고객의 수가 주어진다. 이 값은 100보다 작거나 같은 자연수이다.
+첫째 줄에 문제의 정답을 출력한다.
+
+For each city, the cost of advertising and the number of additional customers gained through that advertisement is given.
+He can invest any integer multiple of the given cost in each city (i.e., the advertisement can be repeated multiple times).
+Your task is to find the minimum amount of money Hyeongtaek must invest in order to increase the number of hotel customers by at least C.
+The first line contains two integers C and N:
+C (1 ≤ C ≤ 1000): the required number of additional hotel customers
+N (1 ≤ N ≤ 20): the number of cities Hyeongtaek can advertise in
+Each of the next N lines contains two integers:
+The cost of advertising in that city
+The number of customers gained from that advertisement
+All values are natural numbers not exceeding 100.
+Output a single integer: the minimum amount of money required to gain at least C customers.
+
+
+## 생각 과정 Thought Process
+1. ** DP **
+문제를 보고 DP 인것을 직감했다. dp[N] 테이블은 각 N명 이상의 고객을 위한 최소비용이고 에리토스테네스의 체를 사용하듯이 상태를 갱신했다.
+
+1. ** Dynamic Programming **
+I immediately recognized that this was a DP problem. The dp[N] table represents the minimum cost required to attract at least N customers, 
+and I updated the states in a way similar to the Sieve of Eratosthenes.
+
+
+##코드 설명 Code
+
+```python
+C, N = map(int, input().split())
+
+cost = []
+customer = []
+for _ in range(N):
+  a, b = map(int, input().split())
+  cost.append(a)
+  customer.append(b)
+
+# dp[N] -> N명의 고객을 위한 최소 비용
+INF = float("inf")
+dp = [INF] * (C + 101)     # customer의 최대 입력 100이므로 안전하게 리스트 길이 설정
+dp[0] = 0
+
+for i in range(N):
+  for j in range(C + 101):
+    dp[j] = min(dp[j], dp[j - customer[i]] + cost[i]) 
+
+print(min(dp[C:]))
+
+
+## 예시 입력 Sample Input
+49 5
+4 5
+9 11
+7 6
+5 4
+3 3
+
+## 예시 출력 Sample Output
+40
+
+
+## 마무리 Conclusion or Reflection
+DP 중에서도 쉬운 DP 문제였던것 같다. 1차원 리스트로 무엇을 기준으로 정할지만 생각하면 쉽게 풀리는 문제였다.
+
+Among DP problems, this one felt relatively easy. Once I figured out what the 1D list should represent, the rest of the solution came together quite naturally.

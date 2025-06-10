@@ -1,0 +1,76 @@
+# Baekjoon No.12015 - 가장 긴 증가하는 부분 수열 2
+
+- [문제 링크](https://www.acmicpc.net/problem/12015)
+
+
+## 문제 설명 Problem Description
+첫째 줄에 수열 A의 크기 N (1 ≤ N ≤ 1,000,000)이 주어진다.
+둘째 줄에는 수열 A를 이루고 있는 Ai가 주어진다. (1 ≤ Ai ≤ 1,000,000)
+첫째 줄에 수열 A의 가장 긴 증가하는 부분 수열의 길이를 출력한다.
+
+Given a sequence A, write a program to find the length of the Longest Increasing Subsequence (LIS) in A.
+For example, if A = {10, 20, 10, 30, 20, 50}, the longest increasing subsequence is {10, 20, 30, 50}, and its length is 4.
+The first line contains an integer N — the length of the sequence A.
+(1 <= N <= 1,000,000)
+The second line contains N integers A1, A2, ..., AN — the elements of the sequence.
+(1 <= Ai <= 1,000,000)
+Print a single integer: the length of the Longest Increasing Subsequence of A.
+
+
+## 생각 과정 Thought Process
+1. ** 정렬 **
+처음에는 2차원 리스트로 인덱스를 각 저장한 후 정렬하고 중복을 제거하여 최적화 후 탐색을 시도하려 했다. 하지만 구현방법이 떠오르지 않아 정렬은 하지 않기로 했다.
+
+2. ** 이분탐색 + 그리디 **
+방법이 떠오르지 않아서 GPT 의 도움을 받았다. 맨 앞에서부터 하나씩 선택해가며 다음 인덱스로 넘어갈때 크기가 작아지면 LIS의 적절한 곳에 그 수를 배치하는 방법이었다.
+실제 LIS 라는 보장은 없을 것 같았지만 길이를 찾는데에는 충분해 보였다.
+
+1. ** Sorting **
+At first, I considered storing each element’s index in a 2D list and then sorting it. 
+My plan was to remove duplicates to optimize the search process. However, I couldn’t come up with a clear implementation strategy, so I decided not to pursue the sorting approach.
+
+2. ** Binary Search + Greedy **
+Since I couldn’t come up with a good solution on my own, I asked GPT for help. The idea was to iterate through the sequence from the beginning and, 
+when the current value was smaller than the last value in the growing subsequence, place it in the appropriate position using binary search.
+Even though the resulting list may not be the actual LIS, it seemed sufficient to determine its length.
+Using dynamic programming would take O(N²), which is impractical given the constraint of N = 1,000,000. So, I tried thinking of alternative approaches but wasn’t successful.
+This was my first time implementing a solution using a combination of binary search and greedy strategy. 
+Now, I’m curious if there’s a way to overcome the limitations of reconstructing the actual LIS sequence from this method.
+
+
+##코드 설명 Code
+
+```python
+import bisect
+
+N = int(input())
+A = list(map(int, input().split()))
+
+LIS = []
+
+for item in A:
+  idx = bisect.bisect_left(LIS, item)
+  if idx == len(LIS):   # 가장 큰 수이면
+    LIS.append(item)
+  else:                 # 적절한 곳에 배치
+    LIS[idx] = item
+
+print(len(LIS))
+
+
+## 예시 입력 Sample Input
+5
+5 3 1 5 3
+
+## 예시 출력 Sample Output
+2
+
+
+## 마무리 Conclusion or Reflection
+DP는 O(N^2) 이어서 입력이 1,000,000 이므로 DP로는 풀수 없는 문제여서 다른 방법을 구상해보다가 실패한 문제이다.
+이분탐색과 그리디 알고리즘을 이용하여 구현하는 방법은 처음 해봤는데 실제 LIS를 구현하는데의 한계를 극복할 방법이 궁금해졌다.
+
+Since the dynamic programming approach has a time complexity of O(N^2), it is not feasible for inputs as large as 1,000,000.
+I tried to come up with other methods but was unsuccessful, so I had to seek a different approach.
+Using binary search combined with a greedy algorithm was something I tried for the first time. 
+While this method can efficiently find the length of the LIS, I became curious about how to overcome its limitation of not being able to reconstruct the actual LIS sequence.

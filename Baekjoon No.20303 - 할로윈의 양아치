@@ -8,6 +8,10 @@
 그 다음 M개의 줄에는 서로 친구인 두 아이의 번호가 공백으로 구분되어 M쌍 주어집니다. 친구 관계는 양방향이며, 각 줄은 두 정수 a와 b로 이루어져 있고 이는 a번 아이와 b번 아이가 친구임을 의미합니다.
 가져갈 수 있는 아이 수가 K명을 넘지 않도록 하면서 얻을 수 있는 사탕 수의 최댓값을 출력합니다.
 
+The first line contains three integers N, M, and K, separated by spaces, where N is the number of children, M is the number of friendships, and K is the maximum number of children you can take.
+The second line contains N integers separated by spaces, where the i-th integer represents the number of candies the i-th child has. 
+The next M lines each contain two integers a and b separated by a space, meaning that child a and child b are friends; the friendship is mutual.
+Print a single integer, the maximum number of candies you can collect by taking no more than K children.
 
 ## 생각 과정 Thought Process
 1. ** 그룹화 **
@@ -15,6 +19,15 @@
 
 2. ** 동적 계획법 **
 공명을 하기위한 아이들의 최소 수가 주어졌으므로 그 미만의 수로 아이를 잡되 가장 많은 사탕의 수를 구해야 하므로 배낭 문제와 비슷하여 동적 계획법을 이용하였다.
+
+
+1. ** Grouping **
+Since choosing one person implies including all of their friends as a single group, I first grouped the children accordingly.
+Each group was defined by the number of connected children and the total number of candies they collectively had.
+
+2. ** Dynamic Programming **
+Given the constraint on the maximum number of children that can be chosen, I needed to select children without exceeding that limit while maximizing the number of candies collected. 
+This made the problem similar to the knapsack problem, so I used dynamic programming to solve it.
 
 
 ##코드 설명 Code
@@ -82,3 +95,5 @@ print(dp[-1])
 
 ## 마무리 Conclusion or Reflection
 어려운 문제는 아니었다. 모두 익숙한 구조로 그룹화 + 동적 계획법이라는 응용인것 외에는 특별함이 없는 간단한 문제였다.
+It wasn't a particularly difficult problem. 
+The structure was familiar, and aside from the combination of grouping and dynamic programming, it was a straightforward and simple application.

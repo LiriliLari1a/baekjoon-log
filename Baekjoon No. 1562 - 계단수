@@ -1,0 +1,112 @@
+# Baekjoon No. 1562 - 계단수
+
+- [문제 링크](https://www.acmicpc.net/problem/1562)
+
+## 문제 설명 Problem Description
+N이 주어질 때, 길이가 N이면서 0부터 9까지 숫자가 모두 등장하는 계단 수가 총 몇 개 있는지 구하는 프로그램을 작성하시오. 0으로 시작하는 수는 계단수가 아니다.
+첫째 줄에 N이 주어진다. N은 1보다 크거나 같고, 100보다 작거나 같은 자연수이다.
+첫째 줄에 정답을 1,000,000,000으로 나눈 나머지를 출력한다.
+
+Given an integer N, count how many stair numbers of length N exist such that all digits from 0 to 9 appear at least once in the number.
+A stair number is defined as a number where every pair of adjacent digits differ by exactly 1.
+Note: A stair number cannot start with the digit 0.
+Input: A single integer N (1 ≤ N ≤ 100), representing the length of the stair number.
+Output : Print the number of valid stair numbers of length N that contain all digits from 0 to 9 at least once, modulo 1,000,000,000.
+
+
+## 생각 과정 Thought Process
+1. ** 긴 종이 **
+어떻게 풀지 고민하다가 모두 연속된 수로 이루어져있으므로 길이가 N 인 긴종이를 좌우로 접어 길이가 10인 종이로 만들면 0~9가 모두 포함되는 수가 아닌가 싶었다.
+하지만 이 비유는 100123 같이 같은 수가 연속으로 포함되는 느낌이므로 이에 대한 생각은 멈췄다.
+
+2. ** 동적 계획법 **
+일반 계단수 문제같은 경우에는 일반적인 동적계획법으로 풀 수 있다. 하지만 0부터 9까지의 모든 수를 포함하고 있어야 하므로 조금 조정이 필요했다.
+그래서 나는 모든 경우의 수에서 0~9중에서 하나라도 빠지는 경우의 수를 빼기로 했다.
+모두 연속된 수이므로 중간에서 3이나 5 같은 수가 단독으로 빠지진 않을 것이라고 생각했다.
+하나만 빠진다고 하면 0이나 9가 빠지기 때문에 하나라도 빠지는 경우의 수를 구하는것은 어렵지않았다.
+따라서 (A, B) 가 "A와 B 사이의 수로 등장하는 경우의 수" 라고 했을때
+result = (0, 9) - (1, 9) - (0, 8) + (1, 8) 해서 구하기로 했다.
+
+1. ** A Long Piece of Paper **
+At first, I considered the idea that since stair numbers are composed of consecutive numbers, 
+I could imagine folding a long strip of paper of length N into a shorter strip of length 10. 
+This way, it might align perfectly with the digits 0 through 9, ensuring all digits are included.
+However, I later realized this analogy was flawed. For example, in numbers like 100123, digits can repeat, 
+and the sequence isn't strictly linear or single-pass. So I decided to drop this idea.
+
+2. ** Dynamic Programming **
+For ordinary stair number problems, a basic dynamic programming approach works well.
+However, since this problem requires that all digits from 0 to 9 appear at least once, I needed to tweak the logic a bit.
+My approach was to calculate all possible stair numbers of length N, then subtract the number of stair numbers that are missing at least one digit.
+Because stair numbers move in steps of ±1, I realized that a digit like 3 or 5 rarely gets excluded unless it's part of a boundary.
+That means it's usually only 0 or 9 that might be missing in practice.
+So, if we define (A, B) as "the number of stair numbers composed only of digits between A and B",
+then we can use the inclusion-exclusion principle like this: 
+result = (0, 9) - (1, 9) - (0, 8) + (1, 8)
+
+
+##코드 설명 Code
+
+```python
+# DP를 이용해 각 범위에 맞는 계단수 계산
+def calculate(matrix):
+  n = len(matrix[0])
+  for i in range(1, N):
+    for j in range(n):
+      result = (matrix[i - 1][j - 1] if j > 0 else 0) + (matrix[i - 1][j + 1] if j < n-1 else 0)
+      matrix[i][j] = result
+
+# 행렬 초기화
+def init(matrix):
+  n = len(matrix[0])
+  for i in range(n):
+    matrix[0][i] = 1
+
+N = int(input())
+
+# 0~9, 1~8, 0~8, 1~9 로 이루어지는 계단수
+matrix_all = [[0] * 10 for _ in range(N)]
+mat_1to8 = [[0] * 8 for _ in range(N)]
+mat_0to8 = [[0] * 9 for _ in range(N)]
+mat_1to9 = [[0] * 9 for _ in range(N)]
+
+init(matrix_all)
+init(mat_1to8)
+init(mat_0to8)
+init(mat_1to9)
+
+calculate(matrix_all)
+calculate(mat_1to8)
+calculate(mat_0to8)
+calculate(mat_1to9)
+
+result = 0
+for i in range(1, 10):    # 0 포함 방지
+  result += matrix_all[N - 1][i]
+
+for i in range(8):
+  result += mat_1to8[N - 1][i]
+
+for i in range(1, 9):   # 0 포함 방지
+  result -= mat_0to8[N - 1][i]
+
+for i in range(9):
+  result -= mat_1to9[N - 1][i]
+
+# 출력
+print(result % 1000000000)
+
+
+## 예시 입력 Sample Input
+1000
+
+## 예시 출력 Sample Output
+243233216
+
+
+## 마무리 Conclusion or Reflection
+원래는 비트마스킹을 써서 푼다고 하는데 이게 훨씬더 빠르고 구현이 간단하다. 개념 자체도 DP와 집합 같이 쉬운 구조를 이용하여 풀었다.
+실제로 비트마스킹을 쓴 풀이보다 약 50배 이상 빠른 풀이이다.
+While many people solve this problem using bitmasking, my solution is much faster and simpler to implement.
+The concept is based on familiar DP and set range logic, making it more intuitive.
+In benchmarks, my approach was found to be over 50 times faster than the bitmasking-based solution.

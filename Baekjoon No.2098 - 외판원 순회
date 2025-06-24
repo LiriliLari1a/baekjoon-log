@@ -1,0 +1,76 @@
+# Baekjoon No.2098 - 외판원 순회
+
+- [문제 링크](https://www.acmicpc.net/problem/2098)
+
+## 문제 설명 Problem Description
+첫째 줄에 도시의 수 N이 주어진다. (2 ≤ N ≤ 16) 다음 N개의 줄에는 비용 행렬이 주어진다. N개의 도시를 모두거쳐 원래의 도시로 돌아와야한다.
+각 행렬의 성분은 1,000,000 이하의 양의 정수이며, 갈 수 없는 경우는 0이 주어진다. W[i][j]는 도시 i에서 j로 가기 위한 비용을 나타낸다.
+첫째 줄에 외판원의 순회에 필요한 최소 비용을 출력한다.
+
+
+## 생각 과정 Thought Process
+1. ** 비트마스킹 **
+처음에는 비트마스킹 사용방법을 잘 몰라서 찾아서 공부하였다. 탐색에서 visited 리스트대신 int 하나로 작은 값의 탐색 표시를 효율적으로 하는것이었다.
+이를 이용해 dfs를 구현해 풀어보았지만 시간초과로 풀리지 않았다.
+
+2. ** 동적 계획법 **
+이미 탐색했던 경로를 다시 탐색해서 시간이 오래걸리는것같아 그 경로의 최소 탐색 비용을 메모제이션을 사용하기로 했다.
+그러나 아무리 생각해도 구현 방법이 떠오르지않아 GPT를 이용하였다.
+코드를 봐도 이해가 잘 되지않아 주석을 달고 정리하면서 헷갈리는 부분을 정리하고 공부하였다.
+
+
+##코드 설명 Code
+
+```python
+INF = float("inf")
+
+# 비트마스킹 재귀형 dfs
+def dfs(now, visited_mask):
+  # 모든 도시 방문
+  if visited_mask == (1 << N) - 1:
+    # 순회 가능
+    if matrix[now][start] != 0:
+      return matrix[now][start]
+    # 순회 불가능
+    else:
+      return INF
+  
+  # 미리저장된 경로 있으면 리턴
+  if dp[now][visited_mask] != -1:
+    return dp[now][visited_mask]
+  
+  # 미리 저장된 경로 없으면 cost 저장
+  min_cost = INF
+  for next in range(N):
+    if visited_mask & (1 << next):
+      continue
+    if matrix[now][next] == 0:
+      continue
+    cost = dfs(next, visited_mask | (1 << next)) + matrix[now][next]
+    min_cost = min(cost, min_cost)
+
+  dp[now][visited_mask] = min_cost
+  return min_cost
+
+N = int(input())
+matrix = [list(map(int, input().split())) for _ in range(N)]
+
+dp = [[-1] * (1 << N) for _ in range(N)]
+start = 0
+print(dfs(start, 1 << start))
+
+
+## 예시 입력 Sample Input
+5
+0 1 9 7 5
+0 0 4 2 3 
+1 2 0 9 7
+9 9 9 0 9
+0 5 0 5 0
+
+## 예시 출력 Sample Output
+19
+
+
+## 마무리 Conclusion or Reflection
+비트마스킹을 처음 이용해보았는데 앞으로 자주 사용할수있을것 같다. 구현에선 도움을 좀 받았지만 비트연산에 익숙하진 않았는데 비트마스킹을 공부하면서 조금 익숙해진 것같다.

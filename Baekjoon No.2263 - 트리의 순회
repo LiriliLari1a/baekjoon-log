@@ -1,0 +1,103 @@
+# Baekjoon No.2263 - 트리의 순회
+
+- [문제 링크](https://www.acmicpc.net/problem/2263)
+
+
+## 문제 설명 Problem Description
+n개의 정점을 갖는 이진 트리의 정점에 1부터 n까지의 번호가 중복 없이 매겨져 있다. 이와 같은 이진 트리의 인오더와 포스트오더가 주어졌을 때, 프리오더를 구하는 프로그램을 작성하시오.
+첫째 줄에 n(1 ≤ n ≤ 100,000)이 주어진다. 다음 줄에는 인오더를 나타내는 n개의 자연수가 주어지고, 그 다음 줄에는 같은 식으로 포스트오더가 주어진다.
+
+You are given a binary tree with n nodes. Each node is uniquely numbered from 1 to n.
+The tree structure is such that no duplicate values exist in the node labels.
+You are provided with the inorder and postorder traversal sequences of this binary tree.
+Your task is to compute and print the preorder traversal sequence of the tree.
+The first line contains an integer n (1 ≤ n ≤ 100,000), the number of nodes in the tree.
+The second line contains n space-separated integers, representing the inorder traversal of the tree.
+The third line contains n space-separated integers, representing the postorder traversal of the tree.
+Print the preorder traversal of the binary tree as a single line of space-separated integers.
+
+
+## 생각 과정 Thought Process
+1. ** 재귀 **
+보통 트리의 순회 문제가 주어졌을때 재귀로 풀었던 기억이 났다. 그래서 함수의 재귀를 이용해서 풀어보고자 했다.
+트리를 모두 만든 후 순서대로 출력하고자 했는데 트리를 만들지 않고 프리오더로 root-left-right 순서로 함수에서 바로 출력하면 되겠다고 생각헸다.
+
+2. ** 재귀 함수 **
+재귀 함수를 구현하는 과정에서 조금 어려웠다. 머릿속으로는 좌우로 계속 나누어가며 재귀로 풀면 되겠다 생각이 들었는데 이를 코드로 옮기려니 까다로웠다.
+필요한 변수와 재귀 종료조건, 그리고 재귀 할때 사용할 적절한 변수까지 여러 방법을 시도하다가 gpt에게 대충 설계를 물어보고 직접 짰다.
+종료 조건은 트리의 끝에 도달하고 다시 재귀됐을때, 즉 인오더의 시작위치가 인오더의 마지막 위치보다 커졌을때(같을때는 서로의 위치가 같음) 정지하기로했다.(포스트오더도 똑같이)
+여러 필요한 변수들을 설정한 후 프리오더이므로 왼쪽서브트리 부터 계산하도록 하고 루트를 계속 갱신하며 재귀된다.
+함수의 인자를 설정하는데에 조금 어려움을 겪었는데 인오더는 left-root-right이기 때문에 좌우로 나누면 root 인덱스를 기준으로 나누면 되고
+포스트오더는 left-right-root 이므로 맨뒤의 루트노드를 제거 한뒤 인오더에서 구한 좌측 서브트리의 크기 만큼 제거한 범위를 탐색하면 됐다.
+
+1. ** Recursion **
+When I saw that this was a tree traversal problem, I immediately recalled that recursion is often used in such cases.
+At first, I thought I needed to build the entire tree structure and then traverse it to get the answer.
+However, I realized that since the goal was to print the preorder traversal (root → left → right), I could print the root directly during the recursion process without explicitly constructing the tree.
+
+2. ** Recursive Function **
+Implementing the recursive function was a bit tricky.
+Although I had the general idea in mind—keep dividing the tree into left and right subtrees recursively—translating that logic into code was challenging.
+I experimented with several approaches to determine which variables I needed, how to structure the base case, and how to pass the correct parameters in each recursive call.
+Eventually, I asked GPT for a rough outline and then implemented the function myself.
+For the base case, I decided to stop the recursion when the inorder start index exceeds the end index, indicating that we've reached beyond a leaf.
+(The same condition applies to postorder.)
+Since preorder means we need to process the root before the subtrees, I printed the root first and then recursively processed the left and right subtrees.
+The trickiest part was figuring out how to correctly calculate the indices for the recursive calls.
+Because inorder is in the left → root → right format, the left and right subtrees can be split based on the root's index in the inorder array.
+On the other hand, postorder is in left → right → root format, so I just had to skip the last element (which is the root), 
+and divide the remaining range using the size of the left subtree obtained from the inorder array.
+
+
+##코드 설명 Code
+
+```python
+import sys
+sys.setrecursionlimit(10**6)
+
+def find_tree(in_start, in_end, post_start, post_end):
+  # 트리의 끝에 도달하면 리턴
+  if in_start > in_end or post_start > post_end:
+    return
+  # 포스트오더의 마지막은 무조건 루트노드
+  root = postorder[post_end]
+  print(root, end = " ")
+
+  root_idx = inorder_idx[root]
+  left_size = root_idx - in_start
+
+  # 왼쪽 서브트리
+  find_tree(in_start, root_idx - 1, post_start, post_start + left_size - 1)
+  # 오른쪽 서브트리
+  find_tree(root_idx + 1, in_end, post_start + left_size, post_end - 1)
+  
+
+N = int(input())
+
+inorder = list(map(int, input().split()))
+postorder = list(map(int, input().split()))
+
+# 루트 노드를 상수시간에 찾기 위해 인덱스 리스트 작성
+inorder_idx = [0] * (N + 1)
+for i in range(N):
+  inorder_idx[inorder[i]] = i
+
+find_tree(0, N-1, 0, N-1)
+
+
+## 예시 입력 Sample Input
+7
+4 2 5 1 6 3 7
+4 5 2 6 7 3 1
+
+## 예시 출력 Sample Output
+1 2 4 5 3 6 7 
+
+
+## 마무리 Conclusion or Reflection
+착각을 몇번 했던 문제였다. 트리를 완벽하게 만든 후 출력해야 한다는 생각과 너무 복잡하게 생각하지 말아야겠다는 생각을 했다.
+포스트오더와 인오더 그리고 프리오더의 성질에 대해 조금 더 접근 해 보는 문제였다.
+
+This problem caused me to second-guess myself a few times.
+I initially believed I had to fully construct the tree first, but then realized that was unnecessary and made things more complicated than needed.
+Overall, this was a great exercise to deeply understand the properties and relationships of inorder, postorder, and preorder traversals.

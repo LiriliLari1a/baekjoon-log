@@ -1,0 +1,217 @@
+# Baekjoon No.9328 - 열쇠
+
+- [문제 링크](https://www.acmicpc.net/problem/9328)
+
+
+## 문제 설명 Problem Description
+상근이는 상하좌우로만 이동할 수 있다.
+'.'는 빈 공간을 나타낸다.
+'*'는 벽을 나타내며, 상근이는 벽을 통과할 수 없다.
+'$'는 상근이가 훔쳐야하는 문서이다.
+알파벳 대문자는 문을 나타낸다.
+알파벳 소문자는 열쇠를 나타내며, 그 문자의 대문자인 모든 문을 열 수 있다.
+마지막 줄에는 상근이가 이미 가지고 있는 열쇠가 공백없이 주어진다. 만약, 열쇠를 하나도 가지고 있지 않는 경우에는 "0"이 주어진다.
+상근이는 처음에는 빌딩의 밖에 있으며, 빌딩 가장자리의 벽이 아닌 곳을 통해 빌딩 안팎을 드나들 수 있다. 
+각각의 문에 대해서, 그 문을 열 수 있는 열쇠의 개수는 0개, 1개, 또는 그 이상이고, 각각의 열쇠에 대해서, 그 열쇠로 열 수 있는 문의 개수도 0개, 1개, 또는 그 이상이다. 열쇠는 여러 번 사용할 수 있다.
+각 테스트 케이스 마다, 상근이가 훔칠 수 있는 문서의 최대 개수를 출력한다.
+
+Sang-geun can move only in the four directions: up, down, left, and right.
+A dot '.' represents an empty space, and an asterisk '*' represents a wall that Sang-geun cannot pass through. A dollar sign '$' represents a document that Sang-geun must steal.
+Uppercase letters represent doors, and lowercase letters represent keys that can open all doors of the corresponding uppercase letter. 
+The last line of input gives the keys that Sang-geun initially possesses, given as a string without spaces; if he has no keys, the input will be "0".
+Sang-geun starts outside the building and can enter or exit through any non-wall space on the border of the map. 
+Each door may have zero or more corresponding keys, and each key may open zero or more doors.
+Keys can be used multiple times. For each test case, print the maximum number of documents Sang-geun can steal.
+
+
+## 생각 과정 Thought Process
+1. ** 시작점 선정 **
+진입할 수 있는 점이 한정적이기 때문에 시작점을 선정하는데에 신경을 많이 썼다. 조금 과정이 복잡했는데 탐색을 하면서 시작점에 변동이 생길 수도 있기 때문이다.
+보통 외곽의 시작점을 찾다가 키를 찾아 외곽에있는 문을 열어 시작점이 추가될수도 있다. 
+그래서 외곽을 총 두번 돌았다. 외곽에서 찾은키와 입력에 주어진 키를 합해 모든 문을 "."으로 바꾸고 한번 더돌아 시작점을 저장했다.
+
+2. ** 너비우선탐색 **
+이제 시작점을 모두 잡았으니 너비우선 탐색을 실시 해야한다. 대부분 기존 너비우선탐색과 같지만 케이스가 많은 점과 새로운 문이 열리면 따로 처리를 해줘야 한다는 다른점이 있다.
+만약 키를 찾았다면 새로운 문이 열리는데 문앞까지 접근했는데 문에 막혀 진입 하지 못한 케이스와 아예 문근처에도 진입하지 못한 케이스가 있다.
+이를 처리하기 위해 문의 상하좌우 위치의 방문여부, 외곽에 위치했는지 여부를 확인하여 만약 True 라면 큐에 삽입했다.
+
+1. ** Start Point Selection **
+Because the entry points are limited, I paid close attention to selecting the starting positions. The process was a bit complicated since the set of valid entry points could change during exploration.
+While scanning the outer border, I might encounter keys that unlock doors also located on the border, which can add new starting positions. 
+Therefore, I looped through the outer border twice: once to collect the keys from the border and merge them with the initially given keys to open all possible doors, and a second time to identify all valid starting positions.
+
+2. ** Breadth-First Search (BFS) **
+With all valid starting points collected, I performed BFS. The overall logic was similar to a typical BFS, but with additional conditions to handle new keys and doors dynamically. 
+When a new key is found, it can open previously locked doors. 
+Two situations must be considered: (1) if Sang-geun had already approached a door but couldn't enter because it was locked,
+and (2) if the door was not even reachable due to previous constraints. To address this, I checked whether the door's adjacent cells had been visited or whether the door was located on the outer edge of the map.
+If either condition was met, I added the door's position to the queue.
+
+
+##코드 설명 Code
+
+```python
+from collections import deque
+
+# 외곽에 있는 소문자(키)를 찾음
+def side_key(board):
+  K = []
+  # 상단과 하단 2줄
+  for i in range(w):
+    if board[0][i].islower():
+      K.append(board[0][i])
+      board[0][i] = "."
+    if board[h - 1][i].islower():
+      K.append(board[h - 1][i])
+      board[0][i] = "."
+      
+  # 좌, 우 2줄
+  for i in range(1, h - 1):
+    if board[i][0].islower():
+      K.append(board[i][0])
+      board[i][0] = "."
+    if board[i][w - 1].islower():
+      K.append(board[i][w - 1])
+      board[i][w - 1] = "."
+  return K
+
+# 외곽에서 시작할 수 있는 위치를 찾음
+def seek_starts(board):
+  starts = set()
+  side_count = 0
+  # 상단과 하단 2줄
+  for i in range(w):
+    if board[0][i] == ".":
+      starts.add((0, i))
+    if board[h - 1][i] == ".":
+      starts.add((h - 1, i))
+    if board[0][i] == "$":
+      starts.add((0, i))
+      side_count += 1
+      board[0][i] = "."
+    if board[h - 1][i] == "$":
+      starts.add((h - 1, i))
+      board[h - 1][i] = "."
+      side_count += 1
+  
+  # 좌, 우 2줄
+  for i in range(1, h - 1):
+    if board[i][0] == ".":
+      starts.add((i, 0))
+    if board[i][w - 1] == ".":
+      starts.add((i, w - 1))
+    if board[i][0] == "$":
+      starts.add((i, 0))
+      side_count += 1
+      board[i][0] = "."
+    if board[i][w - 1] == "$":
+      starts.add((i, w - 1))
+      side_count += 1
+      board[i][w - 1] = "."
+  return starts, side_count
+
+
+direction = [[0, 1], [1, 0], [0, -1], [-1, 0]]
+# 너비우선탐색
+def BFS(board, start, visited):
+  count = 0
+  queue = deque([start])
+  x, y = start
+  visited[x][y] = True
+  while queue:
+    x, y = queue.popleft()
+    for dx, dy in direction:
+      nx, ny = x + dx, y + dy
+      if 0 <= nx < h and 0 <= ny < w:
+        nxt = board[nx][ny]
+        if visited[nx][ny] or nxt == "*":
+          continue
+        # 키 -> 문 열기
+        if nxt.islower():
+          for n, m in doors[nxt.upper()]:
+            board[n][m] = "."
+            # 문에 막혀 진입하지 못했다면 큐에 추가
+            for dn, dm in direction:
+              nn, nm = n + dn, m + dm
+              if 0 <= nn < h and 0 <= nm < w:
+                if visited[nn][nm]:
+                  queue.append((n, m))
+                  visited[n][m] = True
+                  break
+              # 범위내 안들어온다면 바깥쪽임(진입 가능)
+              else:     
+                queue.append((n, m))
+                visited[n][m] = True
+                break
+          queue.append((nx, ny))
+          visited[nx][ny] = True
+          continue
+        if nxt == ".":
+          queue.append((nx, ny))
+          visited[nx][ny] = True
+          continue
+        if nxt == "$":
+          count += 1
+          queue.append((nx, ny))
+          visited[nx][ny] = True
+          continue
+  return count
+
+T = int(input())
+for _ in range(T):
+  result = 0
+  h, w = map(int, input().split())
+  visited = [[False] * w for H in range(h)]
+  board = []
+  doors = {chr(c): [] for c in range(ord('A'), ord('Z') + 1)}   # A~Z 문의 좌표 저장
+  for height in range(h):
+    board.append(list(input()))
+  keys = list(input())
+
+  # 문을 찾아서 저장
+  for i in range(h):
+    for j in range(w):
+      door = board[i][j]
+      if door.isupper():
+        doors[door].append((i, j))
+
+  # 주어진 키와 외곽의 키를 이용해 문을 모두 열기
+  keys += side_key(board)  
+  for key in keys:
+    if key == '0':
+      continue
+    k = key.upper()
+    if k in doors:
+      for q, p in doors[k]:
+        board[q][p] = "."
+  
+  # 외곽의 진입 가능한 곳에서 모두 진입
+  starts, side = seek_starts(board)
+  result += side
+  for start in starts:
+    u, v = start
+    if not visited[u][v]:
+      result += BFS(board, start, visited)
+
+  print(result)
+
+
+## 예시 입력 Sample Input
+1
+5 11
+*.*********
+*$.A..$...*
+****...****
+*......B.$*
+***********
+b
+
+## 예시 출력 Sample Output
+1
+
+
+## 마무리 Conclusion or Reflection
+생각했던 것 보다는 어려운 문제였다. 많이 틀리기도 했는데 아무래도 생각치 못한 케이스를 계산하지 못해서 일어난 오답이었다.
+조금더 신중하게 가능성들을 모두 살펴볼 필요가 있다는 생각을 했다.
+This problem turned out to be more difficult than I expected. 
+I made several mistakes, mostly due to unhandled edge cases that I initially overlooked. It reminded me that I need to think more carefully and thoroughly examine all possible scenarios.

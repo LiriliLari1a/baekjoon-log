@@ -1,0 +1,187 @@
+# Baekjoon No.12100 - 2048(EASY)
+
+- [문제 링크](https://www.acmicpc.net/problem/12100)
+
+
+## 문제 설명 Problem Description
+이 문제에서 다루는 2048 게임은 보드의 크기가 N×N 이다. 보드의 크기와 보드판의 블록 상태가 주어졌을 때, 최대 5번 이동해서 만들 수 있는 가장 큰 블록의 값을 구하는 프로그램을 작성하시오.
+첫째 줄에 보드의 크기 N (1 ≤ N ≤ 20)이 주어진다. 둘째 줄부터 N개의 줄에는 게임판의 초기 상태가 주어진다. 
+0은 빈 칸을 나타내며, 이외의 값은 모두 블록을 나타낸다. 블록에 쓰여 있는 수는 2보다 크거나 같고, 1024보다 작거나 같은 2의 제곱꼴이다. 블록은 적어도 하나 주어진다.
+최대 5번 이동시켜서 얻을 수 있는 가장 큰 블록을 출력한다.
+
+Given an N×N 2048 board (1 ≤ N ≤ 20) with initial block values (all powers of 2, at least one non-zero block), move the board up to 5 times in any direction to get the largest possible block.
+Print the maximum block achievable after at most 5 moves.
+
+
+## 생각 과정 Thought Process
+1. ** 이동 함수 **
+처음으로 블록을 밀때 어떻게 이동을 구현 할 수 있을지 생각해 보았다. 어떤 행렬이 주어졌을때 그 행렬 안에서 인덱스 만으로 처리할려고 하니 복잡했다.
+그래서 한줄마다 0을 제거한 리스트를 만들고 그 리스트에서 수를 하나씩 꺼내와 미는 방향끝에서부터 채워넣었다.
+함수 인자로 행렬과 1~4의 int값을 받고 상하좌우 순서대로 1, 2, 3, 4의 값이 들어오면 각각 실행하도록 했다.
+
+2. ** 탐색 **
+블록이 어떻게 만들어질지 모르니 모든 경우의 수를 탐색해야했다. 모든 경우의수의 개수는 1024개로 직렬처리(상태저장 없이 모든 경우의수)를 하면 시간이 많이 걸릴것 같아서 병렬처리와 유사하게(상태저장) 처리하기로 했다.
+어떻게 보면 트리구조를 보는것과 유사하다고 생각할수도 있는데 extent가 같은 레벨의 트리 사이의 거리라고 생각하면 된다.
+U,D,L,R(상하좌우) 라고 할때
+e는 총 5번 돈다.
+e = 0 : U (<-extent = 4**5->) D (<-extent->) L (<-extent->) R
+e = 1 : UU (<-extent = 4**4->) UD (<-extent->) UL UR DU DD DL DR LU LD LR LL RU RD RL RR
+e = 2 : UUU UUD UUL...
+...
+이런식으로 트리구조를 1차원 리스트로 생각하고 점점 shape 리스트를 채워나갔다.
+
+1. ** Move Function **
+Initially, implementing block movement directly using matrix indices was complex. 
+So I simplified the logic by removing zeros from each row or column, then inserting numbers from the pushing direction. 
+The function takes a matrix and a direction (1 to 4 representing up, down, left, right) and processes accordingly.
+
+2. ** Search Strategy **
+Since the result depends on move sequences, I had to explore all possible combinations (4^5 = 1024). 
+Instead of a serial DFS-like approach, I used a structure similar to parallel processing by storing all states in a single list.
+This simulates a tree structure in a 1D array, where extent represents the distance between nodes at the same level.
+For example:
+e = 0 : U (<-extent = 4**5->) D (<-extent->) L (<-extent->) R
+e = 1 : UU (<-extent = 4**4->) UD (<-extent->) UL UR DU DD DL DR LU LD LR LL RU RD RL RR
+e = 2 : UUU UUD UUL...
+...
+
+
+##코드 설명 Code
+
+```python
+# 상 : 1 / 하 : 2 / 좌 : 3 / 우: 4
+def move(direction, prev_shape):
+  current = [[0] * N for _ in range(N)]
+  if direction == 1:
+    for i in range(N):
+      line = []
+      for j in range(N):
+        if prev_shape[j][i] != 0:
+          line.append(prev_shape[j][i])
+      idx = -1
+      for item in line:
+        if idx == -1:
+          idx += 1
+          current[idx][i] = item
+        elif current[idx][i] == item:
+          current[idx][i] += item
+          idx += 1
+        elif current[idx][i] == 0:
+          current[idx][i] = item
+        else:
+          idx += 1
+          current[idx][i] = item
+
+  if direction == 2:
+    for i in range(N):
+      line = []
+      for j in range(N - 1, -1, -1):
+        if prev_shape[j][i] != 0:
+          line.append(prev_shape[j][i])
+      idx = N
+      for item in line:
+        if idx == N:
+          idx -= 1
+          current[idx][i] = item
+        elif current[idx][i] == item:
+          current[idx][i] += item
+          idx -= 1
+        elif current[idx][i] == 0:
+          current[idx][i] = item
+        else:
+          idx -= 1
+          current[idx][i] = item
+
+  if direction == 3:
+    for i in range(N):
+      line = []
+      for j in range(N):
+        if prev_shape[i][j] != 0:
+          line.append(prev_shape[i][j])
+      idx = -1
+      for item in line:
+        if idx == -1:
+          idx += 1
+          current[i][idx] = item
+        elif current[i][idx] == item:
+          current[i][idx] += item
+          idx += 1
+        elif current[i][idx] == 0:
+          current[i][idx] = item
+        else:
+          idx += 1
+          current[i][idx] = item
+  
+  if direction == 4:
+    for i in range(N):
+      line = []
+      for j in range(N - 1, -1, -1):
+        if prev_shape[i][j] != 0:
+          line.append(prev_shape[i][j])
+      idx = N
+      for item in line:
+        if idx == N:
+          idx -= 1
+          current[i][idx] = item
+        elif current[i][idx] == item:
+          current[i][idx] += item
+          idx -= 1
+        elif current[i][idx] == 0:
+          current[i][idx] = item
+        else:
+          idx -= 1
+          current[i][idx] = item
+
+  return current
+
+N = int(input())
+
+MAX = 4 ** 5
+matrix = []
+for i in range(N):
+  matrix.append(list(map(int, input().split())))
+
+shape = [[[0] * (N) for _ in range(N)] for _ in range(MAX)]    # result의 현재 모양 리스트
+
+UDLR = 1
+extent = 4 ** 5   # 한 칸으로 보는 크기
+shape[0] = matrix[:]
+for e in range(5):
+  extent //= 4
+  for i in range(0, MAX, extent):
+    if UDLR == 1:
+      prev = shape[i][:]
+    shape[i] = move(UDLR, prev)
+    UDLR = (UDLR % 4) + 1
+
+# 최댓값 탐색
+max_value = 0
+for i in range(MAX):
+  for j in range(N):
+    for k in range(N):
+      max_value = max(max_value, shape[i][j][k])
+print(max_value)
+
+
+## 예시 입력 Sample Input
+10
+16 16 8 32 32 0 0 8 8 8
+16 0 0 0 0 8 0 0 0 16
+0 0 0 0 0 0 0 0 0 2
+0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0
+
+
+## 예시 출력 Sample Output
+64
+
+## 마무리 Conclusion or Reflection
+난이도가 올라오면서 코드 길이가 길어진 느낌을 요즘 받았다. 아직 헤멘다거나 그런 경우는 자주 있진 않는데 디버깅 실력이 늘었는지 테스트케이스로 하나하나 코드를 까보는것에 재미를 느끼는 중이다.
+
+Lately, I’ve noticed that my code tends to get longer as the problem difficulty increases. 
+I don’t often find myself completely stuck, but I feel like my debugging skills have improved. I’ve been enjoying stepping through test cases one by one and analyzing my code in detail.

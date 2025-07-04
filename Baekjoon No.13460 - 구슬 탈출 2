@@ -1,0 +1,176 @@
+  # Baekjoon No.13460 - 구슬 탈출 2
+
+- [문제 링크](https://www.acmicpc.net/problem/13460)
+
+## 문제 설명 Problem Description
+보드의 세로 크기는 N, 가로 크기는 M이고, 편의상 1×1크기의 칸으로 나누어져 있다. 가장 바깥 행과 열은 모두 막혀져 있고, 보드에는 구멍이 하나 있다.
+빨간 구슬과 파란 구슬의 크기는 보드에서 1×1크기의 칸을 가득 채우는 사이즈이고, 각각 하나씩 들어가 있다. 
+게임의 목표는 빨간 구슬을 구멍을 통해서 빼내는 것이다. 이때, 파란 구슬이 구멍에 들어가면 안 된다.
+이때, 구슬을 손으로 건드릴 수는 없고, 중력을 이용해서 이리 저리 굴려야 한다. 왼쪽으로 기울이기, 오른쪽으로 기울이기, 위쪽으로 기울이기, 아래쪽으로 기울이기와 같은 네 가지 동작이 가능하다.
+첫 번째 줄에는 보드의 세로, 가로 크기를 의미하는 두 정수 N, M (3 ≤ N, M ≤ 10)이 주어진다. 다음 N개의 줄에 보드의 모양을 나타내는 길이 M의 문자열이 주어진다.
+이 문자열은 '.', '#', 'O', 'R', 'B' 로 이루어져 있다. '.'은 빈 칸을 의미하고, '#'은 공이 이동할 수 없는 장애물 또는 벽을 의미하며, 'O'는 구멍의 위치를 의미한다. 'R'은 빨간 구슬의 위치, 'B'는 파란 구슬의 위치이다.
+입력되는 모든 보드의 가장자리에는 모두 '#'이 있다. 구멍의 개수는 한 개 이며, 빨간 구슬과 파란 구슬은 항상 1개가 주어진다.
+최소 몇 번 만에 빨간 구슬을 구멍을 통해 빼낼 수 있는지 출력한다. 만약, 10번 이하로 움직여서 빨간 구슬을 구멍을 통해 빼낼 수 없으면 -1을 출력한다.
+
+
+## 생각 과정 Thought Process
+1. ** 구슬 이동 **
+보드를 기울이면 두 구슬이 이동해야한다. 보드를 모두 탐색하며 구슬을 찾고 이동시키는 방법도 있지만 비효율 적이어서 구슬의 위치를 저장한 후 구슬만 이동시켰다.
+보드와 기울이는 방향(상 하 좌 우 : 1 2 3 4) 그리고 구슬의 위치를 인자로 받고 빈공간이 아닐때까지 이동시킨다.
+구슬이 같은 줄에 있을 때 기울이는 방향에 더 가까이 놓여져 있는 구슬을 먼저 이동시키도록 했다. 이렇게 하지 않으면 구슬의 순서가 바뀔수도 있기 때문이다.
+빈공간이 아닌곳에 위치하는 것이 구멍이면 탈출해서 각 위치를 (-1, -1)로 설정하고 기울인 후 보드의 상태 함께 반환한다.
+
+2. ** 너비우선탐색 **
+구슬 이동 함수를 통해 보드를 움직이고 동일한 위치일때 탐색하지 않도록 구슬의 위치를 visited에 저장했다.
+depth 변수를 통해 몇번 보드를 기울였는지 저장한 후 빨간구슬만 구멍으로 나왔을 때 리턴했다.
+아무구슬도 빠지지 않고 보드의 상황이 바꼈다면 큐에 추가하고 만약 11번 이상 기울였으면 -1을 리턴하도록 했다.
+
+1. ** Ball Movement **
+When the board is tilted, both balls must move accordingly. 
+Instead of scanning the entire board each time to locate the balls (which is inefficient), I stored the positions of the red and blue balls and moved them directly.
+The movement function takes the board, direction (1 = up, 2 = down, 3 = left, 4 = right), and the ball positions as input. Each ball moves until it hits a wall or falls into the hole.
+If the two balls are in the same row or column, the one closer in the tilt direction is moved first to prevent them from swapping places.
+If a ball falls into the hole, its position is set to (-1, -1). After tilting, the function returns the updated board state along with the new ball positions.
+
+2. **  Breadth-First Search **
+Using the ball movement function, I implemented BFS to simulate all possible board tilts. To avoid revisiting the same state, I stored the ball positions in a visited set.
+I tracked the number of tilts using a depth variable. When only the red ball falls into the hole, the function returns the current depth as the answer.
+If neither ball falls into the hole and the board state changes, the new state is added to the queue. If the number of tilts exceeds 10, the function returns -1.
+
+
+##코드 설명 Code
+
+```python
+import copy
+from collections import deque
+
+# 상 : 1, 하 : 2, 좌 : 3, 우 : 4
+def tilting(board, direction, ball_location):
+  current = copy.deepcopy(board)
+  rx, ry, bx, by = ball_location
+  if direction == 1 or direction == 2:
+    if direction == 1:
+      d = -1
+    if direction == 2:
+      d = 1
+    def move(x, y, current_board, d):
+      dx = 0
+      # 이동할수 있는 거리를 잼
+      while True:
+        dx += d
+        if current_board[x + dx][y] != ".":
+          break
+      # 구슬 탈출
+      if current_board[x + dx][y] == "O":
+        current_board[x][y] = "."
+        return current_board, -1, -1
+      # 구슬이 움직이지 못함
+      elif dx == d:
+        return current_board, x, y
+      # 구슬이 벽에 부딪힘
+      else:
+        current_board[x + dx - d][y] = current_board[x][y]
+        current_board[x][y] = "."
+      return current_board, x + dx - d, y
+    # 구슬 위치상태와 기울이는 방향에 따라 순서 조정
+    if (rx > bx and direction == 1) or (rx < bx and direction == 2):
+      current, bx, by = move(bx, by, current, d)
+      current, rx, ry = move(rx, ry, current, d)
+    else:
+      current, rx, ry = move(rx, ry, current, d)
+      current, bx, by = move(bx, by, current, d)
+
+  if direction == 3 or direction == 4:
+    if direction == 3:
+      d = -1
+    if direction == 4:
+      d = 1
+    def move(x, y, current_board, d):
+      dy = 0
+      while True:
+        dy += d
+        if current_board[x][y + dy] != ".":
+          break
+      if current_board[x][y + dy] == "O":
+        current_board[x][y] = "."
+        return current_board, -1, -1
+      elif dy == d:
+        return current_board, x, y
+      else:
+        current_board[x][y + dy - d] = current_board[x][y]
+        current_board[x][y] = "."
+      return current_board, x, y + dy - d
+    
+    if (ry > by and direction == 4) or (ry < by and direction == 3):
+      current, rx, ry = move(rx, ry, current, d)
+      current, bx, by = move(bx, by, current, d)
+    else:
+      current, bx, by = move(bx, by, current, d)
+      current, rx, ry = move(rx, ry, current, d)
+
+  return current, [rx, ry, bx, by]
+
+# 너비우선탐색으로 최소값 탐색
+def BFS(matrix, ball_loc):
+  visited = set()
+  v = (ball_loc[0], ball_loc[1], ball_loc[2], ball_loc[3])
+  visited.add(v)
+  queue = deque([(matrix, ball_loc, 1)])
+  while queue:
+    mat, ball, depth = queue.popleft()
+    if depth == 11:
+      return -1
+
+    # 상 : 1, 하 : 2, 좌 : 3, 우 : 4
+    for direct in [1, 2, 3, 4]:
+      cur_mat, redblue = tilting(mat, direct, ball)
+      # 파란 구슬이 빠짐
+      if redblue[2] == -1 or mat == cur_mat: 
+        continue
+      # 빨간 구슬만 빠짐
+      if redblue[0] == -1:
+        return depth
+      # 아무 구슬도 빠지지 않고 행렬이 변하면 큐에 추가
+      if not (redblue[0], redblue[1], redblue[2], redblue[3]) in visited:
+        queue.append((cur_mat, redblue, depth + 1))
+        visited.add((redblue[0], redblue[1], redblue[2], redblue[3]))
+  return -1
+
+N, M = map(int, input().split())
+matrix = []
+for i in range(N):
+  matrix.append(list(map(str, input())))
+
+# 빨간구슬과 파란구슬의 위치 저장
+rb = [0, 0, 0, 0]
+for i in range(N):
+  for j in range(M):
+    if matrix[i][j] == "R":
+      rb[0], rb[1] = i, j
+    if matrix[i][j] == "B":
+      rb[2], rb[3] = i, j
+
+# 출력
+print(BFS(matrix, rb))
+
+
+## 예시 입력 Sample Input
+5 5
+#####
+#RB.#
+#...#
+#.O.#
+#####
+
+## 예시 출력 Sample Output
+2
+
+
+## 마무리 Conclusion or Reflection
+문제가 까다롭진 않았지만 처음에 보드를 모두 탐색하며 구슬이 있을 때 기울이도록 구현을 했는데
+생각을 조금 해보니 구슬의 위치를 저장해놓으면 visited에도 사용할 수 있고 훨씬 빠를것 같아 그렇게 구현했다.
+등장하는 변수가 많아 조금 어지러웠는데 최적화를 하면 가독성이 조금더 나아질 것같다.
+
+The problem itself wasn’t too tricky, but at first, I tried scanning the whole board every time to move the balls.
+After some thought, I realized it’s much more efficient to track the ball positions directly, which also made it easier to manage the visited states.
+There were a lot of variables involved, which made the code a bit messy at times. Some further optimization could improve readability.

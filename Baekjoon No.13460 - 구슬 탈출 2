@@ -12,6 +12,13 @@
 입력되는 모든 보드의 가장자리에는 모두 '#'이 있다. 구멍의 개수는 한 개 이며, 빨간 구슬과 파란 구슬은 항상 1개가 주어진다.
 최소 몇 번 만에 빨간 구슬을 구멍을 통해 빼낼 수 있는지 출력한다. 만약, 10번 이하로 움직여서 빨간 구슬을 구멍을 통해 빼낼 수 없으면 -1을 출력한다.
 
+You are given a board of size N×M (3 ≤ N, M ≤ 10), where each cell is 1×1 in size. The outermost rows and columns are all walls. 
+There is exactly one hole ('O') on the board, and two balls: one red ('R') and one blue ('B'), each occupying one cell. The goal is to make the red ball fall into the hole without the blue ball falling in.
+You cannot move the balls directly; instead, you tilt the board in one of four directions (up, down, left, right), causing both balls to roll in that direction until they hit a wall ('#') or fall into the hole.
+Both balls move simultaneously and independently.
+If the red ball falls into the hole and the blue ball does not, the game is successfully cleared. You must determine the minimum number of moves (tilts) needed to clear the game.
+If it's not possible within 10 moves, output -1.
+
 
 ## 생각 과정 Thought Process
 1. ** 구슬 이동 **

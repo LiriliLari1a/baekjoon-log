@@ -1,0 +1,165 @@
+# Baekjoon No.17143 - 낚시왕
+
+- [문제 링크](https://www.acmicpc.net/problem/17143)
+
+## 문제 설명 Problem Description
+낚시왕은 처음에 1번 열의 한 칸 왼쪽에 있다. 다음은 1초 동안 일어나는 일이며, 아래 적힌 순서대로 일어난다. 낚시왕은 가장 오른쪽 열의 오른쪽 칸에 이동하면 이동을 멈춘다.
+1. 낚시왕이 오른쪽으로 한 칸 이동한다.
+2. 낚시왕이 있는 열에 있는 상어 중에서 땅과 제일 가까운 상어를 잡는다. 상어를 잡으면 격자판에서 잡은 상어가 사라진다.
+3. 상어가 이동한다.
+상어가 이동을 마친 후에 한 칸에 상어가 두 마리 이상 있을 수 있다. 이때는 크기가 가장 큰 상어가 나머지 상어를 모두 잡아먹는다.
+첫째 줄에 격자판의 크기 R, C와 상어의 수 M이 주어진다. (2 ≤ R, C ≤ 100, 0 ≤ M ≤ R×C)
+둘째 줄부터 M개의 줄에 상어의 정보가 주어진다. 상어의 정보는 다섯 정수 r, c, s, d, z (1 ≤ r ≤ R, 1 ≤ c ≤ C, 0 ≤ s ≤ 1000, 1 ≤ d ≤ 4, 1 ≤ z ≤ 10000) 로 이루어져 있다.
+(r, c)는 상어의 위치, s는 속력, d는 이동 방향, z는 크기이다. d가 1인 경우는 위, 2인 경우는 아래, 3인 경우는 오른쪽, 4인 경우는 왼쪽을 의미한다.
+두 상어가 같은 크기를 갖는 경우는 없고, 하나의 칸에 둘 이상의 상어가 있는 경우는 없다.
+낚시왕이 잡은 상어 크기의 합을 출력한다.
+
+The Fisher King initially starts one cell to the left of column 1. The following actions occur in 1 second, and they occur in the order described below. 
+The Fisher King stops moving once he reaches the rightmost cell of the rightmost column.
+1. The Fisher King moves one cell to the right.
+2. Among the sharks in the same column as the Fisher King, the shark closest to land (topmost row) is caught. If a shark is caught, it is removed from the grid.
+3. All sharks move.
+After the sharks finish moving, multiple sharks can be in the same cell.
+In that case, only the largest shark survives — it eats all the others.
+
+
+## 생각 과정 Thought Process
+1. ** 이동 함수 **
+이동 함수를 만드는 데에 꽤 많은 공을 들였다. 시간 제한이 1 초로 짧은 편이기도 하고 많은 상어 입력이 있을 수 있으므로 상수시간 정도로 상어의 이동을 처리하는 방법을 생각헤 내야 했다.
+그래서 상어가 이동할때 일정한 사이클이 있으므로 모든 사이클을 나머지 연산으로 제하고 수학적으로 인덱스 범위 내로 들어올 수 있을때 까지 왕복반사하여 구현했다.
+
+2. ** 정보 저장 및 수정 **
+정보 저장도 꽤나 까다로웠다고 생각했다. 주어진 정보가 많고 이동할 때 마다 정보가 계속 바뀌기 때문에 가변값과 불변값을 분리해야 할 필요가 있다고 느꼈다.
+가변값은 수정이 쉬운 딕셔너리에, 불변값은 행렬에 저장하여 상어가 이동하면 불변값 그대로 옮겼다.
+
+1. ** Movement Function **
+I put quite a lot of effort into designing the movement function. Since the time limit was tight (1 second) and there could be many shark entries, I had to find a way to process shark movement in constant time.
+I realized that sharks move in a predictable cycle, so I used modulo operations to reduce the total distance and implemented the bouncing movement mathematically until the position falls within the valid index range.
+
+2. ** Data Storage and Updates **
+I found data storage to be quite tricky. Since a lot of information is given and the data constantly changes with each move, I felt the need to separate mutable and immutable data.
+I stored mutable data in a dictionary for easy modification and immutable data in a matrix. When a shark moved, I simply transferred the immutable data accordingly.
+
+
+##코드 설명 Code
+
+```python
+# 상 : 1 / 하 : 2 / 우 : 3 / 좌 : 4
+# 사이클 제거 후 인덱스 범위내로 들어올 때 까지 최대 2번 왕복반사하여 구현
+def moving(x, y, direction, speed):
+  if direction == 1:
+    remain = speed % (2 * (R - 1))
+    remain = x - remain
+    if remain >= 0:
+      return remain, y, 1
+    remain = -remain
+    if remain < R:
+      return remain, y, 2
+    return 2 * (R - 1) - remain, y, 1
+
+  if direction == 2:
+    remain = speed % (2 * (R - 1))
+    remain = x + remain
+    if remain < R:
+      return remain, y, 2
+    remain = 2 * (R  - 1) - remain
+    if remain >= 0:
+      return remain, y, 1
+    return -remain, y, 2
+
+  if direction == 3:
+    remain = speed % (2 * (C - 1))
+    remain = y + remain
+    if remain < C:
+      return x, remain, 3
+    remain = 2 * (C - 1) - remain
+    if remain >= 0:
+      return x, remain, 4
+    return x, -remain, 3
+
+  if direction == 4:
+    remain = speed % (2 * (C - 1))
+    remain = y - remain
+    if remain >= 0:
+      return x, remain, 4
+    remain = -remain
+    if remain < C:
+      return x, remain, 3
+    return x, 2 * (C - 1) - remain, 4
+
+sharks = {}
+R, C, M = map(int, input().split())
+board = [[(0, 0)] * C for _ in range(R)]
+
+for i in range(M):
+  # 위치 / 위치 / 속력 / 이동방향 / 크기
+  r, c, s, d, z = map(int, input().split())
+  sharks[z] = (r - 1, c - 1, d)   # 가변 변수(위치, 이동방향)는 딕셔너리에 저장
+  board[r - 1][c - 1] = (z, s)    # 불변 변수(무게, 속도)는 행렬에 저장
+
+fisherman = 0
+result = 0
+while fisherman < C:
+  deleted = []
+  temp_board = [[(0, 0)] * C for _ in range(R)]
+  # 낚시꾼이 상어를 잡음
+  for i in range(R):
+    if board[i][fisherman] != (0, 0):
+      weight, speed = board[i][fisherman]
+      result += weight
+      del sharks[weight]
+      break
+
+  # 상어 이동
+  for shark in sharks:
+    r, c, d = sharks[shark]
+    z, s = board[r][c]
+    nr, nc, nd = moving(r, c, d, s)
+    # 빈공간이면
+    if temp_board[nr][nc] == (0, 0):
+      temp_board[nr][nc] = (z, s)
+      sharks[z] = (nr, nc, nd)
+    # 이미 자리잡고 있는 상어가 있으면
+    else:
+      if temp_board[nr][nc] > (z, s):
+        deleted.append(z)
+      else:
+        w = temp_board[nr][nc][0]
+        deleted.append(w)
+        temp_board[nr][nc] = (z, s)
+        sharks[z] = (nr, nc, nd)
+
+  board = [[(0, 0)] * C for _ in range(R)]
+
+  # 잡히거나 먹힌 상어 제거
+  for died in deleted:
+    del sharks[died]
+  # 행렬 업데이트
+  for shark in sharks:
+    r, c, d = sharks[shark]
+    board[r][c] = temp_board[r][c]
+  fisherman += 1    # 낚시꾼 위치 이동
+
+print(result)
+
+
+## 예시 입력 Sample Input
+4 6 8
+4 1 3 3 8
+1 3 5 2 9
+2 4 8 4 1
+4 5 0 1 4
+3 3 1 2 7
+1 5 8 4 3
+3 6 2 1 2
+2 2 2 3 5
+
+## 예시 출력 Sample Output
+22
+
+## 마무리 Conclusion or Reflection
+구현과 시뮬레이션에 관한 문제였는데 쉬운 문제는 아니었다. 특히 움직임을 구현할 때 좀 까다로웠다.
+나중에 생각을 해보니 힙을 이용해서 무게를 작은것 부터 이동시키면 덮어씌우면 그만이므로 힙을 이용 한 방법으로도 구현해 볼 수 있을 것같다.
+
+This was a problem focused on implementation and simulation, and it was not an easy one. Implementing the movement logic in particular was quite challenging.
+Later, I realized that using a heap to sort by size and simply overwriting smaller sharks could be another approach, so I might try implementing it using a heap as well.

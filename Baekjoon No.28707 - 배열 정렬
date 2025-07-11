@@ -1,0 +1,126 @@
+# Baekjoon No.28707 - 배열 정렬
+
+- [문제 링크](https://www.acmicpc.net/problem/28707)
+
+
+## 문제 설명 Problem Description
+배열 A는 A₁부터 Aₙ까지 총 N개의 양의 정수로 이루어진 배열이다. 이 배열을 오름차순, 즉 앞에서부터 뒤로 갈수록 값이 작거나 같도록 정렬하려고 한다. 이를 위해 총 M개의 교환 연산이 주어진다. 
+각 연산은 배열 A의 lᵢ번째 수와 rᵢ번째 수를 서로 바꾸며, 이때 cᵢ의 비용이 든다.
+각 연산은 순서나 횟수의 제한 없이 원하는 만큼 사용할 수 있다. 배열 A를 오름차순으로 정렬하는 데 필요한 총 비용의 최솟값을 구하는 것이 목적이다.
+입력으로는 첫째 줄에 배열 A의 길이 N이 주어진다. 둘째 줄에는 배열 A의 원소 A₁부터 Aₙ까지가 공백으로 구분되어 주어진다. 셋째 줄에는 가능한 교환 연산의 개수 M이 주어진다.
+이어서 M개의 줄에 걸쳐 각 교환 연산의 정보가 주어진다. i번째 줄에는 정수 lᵢ, rᵢ, cᵢ가 공백으로 구분되어 주어진다.
+
+Array A consists of N positive integers from A₁ to Aₙ. The goal is to sort this array in non-decreasing order, meaning each element should be less than or equal to the next one. 
+To achieve this, M types of swap operations are available.
+Each operation allows you to swap the lᵢ-th and rᵢ-th elements of A at a cost of cᵢ.
+You may perform these operations as many times as you like, in any order.
+The objective is to determine the minimum total cost required to sort the array A in non-decreasing order.
+As input, the first line contains the integer N, the length of the array A.
+The second line contains N integers A₁ through Aₙ, separated by spaces.
+The third line contains the integer M, the number of available swap operations.
+The next M lines each contain three integers lᵢ, rᵢ, and cᵢ, separated by spaces, representing a swap between the lᵢ-th and rᵢ-th elements at a cost of cᵢ.
+
+
+## 생각 과정 Thought Process
+1. ** 다익스트라 **
+서로 수를 교차 했을 때의 비용이 주어진 형태이므로 힙큐를 이용한 다익스트라로 풀면 될거라고 생각했다.
+
+2. ** 비내림차순 판별 **
+다익스트라 내에서 비내림차순 여부를 계속 확인하면 시간적 비용이 많이 들것이므로 수열이 짧은 것을 보고 수열 key 로 이루어진 딕셔너리를 만든 후 비내림차순 여부와 비용을 저장하도록 했다.
+
+1. ** Dijkstra Algorithm **
+Since the problem involves the cost of swapping elements, I thought it could be solved using Dijkstra's algorithm with a heap queue.
+
+2. ** Non-decreasing Order Check **
+Checking whether a sequence is in non-decreasing order repeatedly during Dijkstra’s algorithm would be time-consuming.
+So, considering the short length of the sequence, I created a dictionary with tuple keys representing permutations of the indices and stored both the non-decreasing status and the cost.
+
+##코드 설명 Code
+
+```python
+from itertools import permutations
+import heapq
+
+INF = float("inf")
+
+def swap(a, b):
+  return b, a
+
+# 수열이 비내림차순인지 판별
+def is_increase(sequence):
+  for i in range(N - 1):
+    if sequence[i] > sequence[i + 1]:
+      return False
+  return True
+
+# 다익스트라
+def dijkstra(sequence, N, dictionary, cross):
+  T_list = []   # 비내림차순인 수열의 비용을 저장
+  heap = [(0, sequence)]
+  shape = tuple(sequence)
+  dictionary[shape][1] = 0
+  if dictionary[shape][0] == True:
+    return 0
+  while heap:
+    cur_weight, cur_sequence = heapq.heappop(heap)
+    for l, r, c in cross:
+      nxt_sequence = cur_sequence[:]
+      nxt_weight = cur_weight + c
+      nxt_sequence[l], nxt_sequence[r] = swap(nxt_sequence[l], nxt_sequence[r])
+      shape = tuple(nxt_sequence)
+
+      # 비내림차순이면 비용 저장
+      if dictionary[shape][0] == True:
+        T_list.append(nxt_weight)
+
+      if nxt_weight < dictionary[shape][1]:
+        dictionary[shape][1] = nxt_weight
+        heapq.heappush(heap, (nxt_weight, nxt_sequence))
+        
+  if len(T_list) > 0:
+    return min(T_list)
+  else:
+    return -1
+
+N = int(input())
+A = list(map(int, input().split()))
+
+# 수를 바꾸는 툴 저장
+cross = []
+M = int(input())
+for i in range(M):
+  l, r, c = map(int, input().split())
+  cross.append((l - 1, r - 1, c))
+
+# 수열마다의 오름차순 여부와 비용 저장
+per_dict = {i: [False, INF] for i in permutations(A)}
+for per in per_dict:
+  sequence = [per[i] for i in range(N)]
+  if is_increase(sequence):
+    per_dict[per][0] = True
+    
+print(dijkstra(A, N, per_dict, cross))
+
+
+## 예시 입력 Sample Input
+4
+1 3 1 3
+6
+1 2 3
+1 3 3
+1 4 3
+2 3 3
+2 4 1
+3 4 1
+
+## 예시 출력 Sample Output
+2
+
+## 마무리 Conclusion or Reflection
+문제를 잘못 읽어 어렵게 해석하여 조금 시간이 오래걸렸으나 어려운 문제는 아니었다.
+그래도 지금 현재 난이도에서 생각보다 까다로운 문제들이 많았는데 그중에서는 가장 쉬운 난이도의 문제였다.
+다익스트라 활용이 오랜만에 나와서 다시 복기시키는 계기가 되었다.
+
+I initially misread the problem, which made the solution more complicated and took extra time. 
+However, the problem itself wasn’t difficult. Among the recent problems, which have been unexpectedly tricky at this level, this one was the easiest.
+It was also a good opportunity to review and refresh my understanding of how to apply Dijkstra's algorithm.

@@ -1,0 +1,97 @@
+# Baekjoon No.1799 - 비숍
+
+- [문제 링크](https://www.acmicpc.net/problem/1799)
+
+
+## 문제 설명 Problem Description
+첫째 줄에 체스판의 크기가 주어진다. 체스판의 크기는 10이하의 자연수이다. 
+둘째 줄부터 아래의 예와 같이 체스판의 각 칸에 비숍을 놓을 수 있는지 없는지에 대한 정보가 체스판 한 줄 단위로 한 줄씩 주어진다.
+비숍을 놓을 수 있는 곳에는 1, 비숍을 놓을 수 없는 곳에는 0이 빈칸을 사이에 두고 주어진다.
+첫째 줄에 주어진 체스판 위에 놓을 수 있는 비숍의 최대 개수를 출력한다.
+
+The first line contains the size of the chessboard. The size is a natural number not exceeding 10.
+From the second line onward, information is given about whether a bishop can be placed on each square of the chessboard, one row per line, as shown in the example below.
+A 1 indicates that a bishop can be placed on the square, and a 0 indicates that a bishop cannot be placed there. Numbers are separated by spaces.
+Print the maximum number of bishops that can be placed on the given chessboard.
+
+
+## 생각 과정 Thought Process
+1. ** 백트래킹 **
+예전에 풀었던 N퀸 문제와 흡사해 보였다. 긴 시간 제한과 체스판에 놓을수 있는 개수를 물어보므로 백트래킹으로 모든 경우의수를 찾아 보도록 해야했다.
+세트로 현재 위치에 비숍을 놓을 수 있는지 확인하고 비숍을 추가하는 경우와 비숍을 추가하지 않는 경우로 나누어 count변수를 증가시켰다.
+
+2. ** 분리 **
+벡트레킹 만으로 제출했더니 시간초과가 났다. 우려했던 경우긴 했지만 이 이상으로 시간을 줄이긴 힘들어보였다.
+서칭을 해 보았는데 비숍의 특성상 흑과 백 사이를 넘나 들수 없으므로 이를 분리하여 시간을 효율적으로 줄일 수 있다는것을 알아냈다.
+그래서 흑과 백에 놓여진 각각 비숍을 분리하여 백트래킹을 시도 하였다.
+
+1. ** Backtracking **
+The problem seemed similar to the N-Queens problem I had solved before. 
+Given the long time limit and the requirement to find the maximum number of bishops that can be placed, I decided to use backtracking to explore all possible cases.
+I used sets to check whether a bishop could be placed at the current position and incremented the count variable both when placing a bishop and when skipping the position.
+
+2. ** Separation **
+Submitting the solution with just backtracking resulted in a time limit exceeded error. 
+Although I had been worried about this possibility, it seemed difficult to optimize the time any further within that approach.
+Upon researching,I found that due to the nature of bishops, they cannot cross between black and white squares. By separating them, I could reduce the time complexity more efficiently. 
+Therefore, I separated the black and white squares and performed backtracking on each individually.
+
+
+##코드 설명 Code
+
+```python
+# A : i - j, B : i + j
+def backtracking(A, B, enable, location, count):
+  if location == len(enable):
+    return count
+  max_count = count
+  i, j = enable[location]
+  # 해당 비숍을 추가하는 경우
+  if (i - j) not in A and (i + j) not in B:
+    A.add(i - j)
+    B.add(i + j)
+    max_count = max(max_count, backtracking(A, B, enable, location + 1, count + 1))
+    A.remove(i - j)
+    B.remove(i + j)
+  # 해당 비숍을 추가하지 않는 경우
+  max_count = max(max_count, backtracking(A, B, enable, location + 1, count))
+  return max_count
+
+N = int(input())
+
+board = [list(map(int, input().split())) for _ in range(N)]
+
+# 체스판의 흰색 부분과 검은색 부분을 구별
+white = []
+black = []
+for i in range(N):
+  for j in range(N):
+    if board[i][j] == 1:
+      if (i + j) % 2 == 0:
+        black.append((i, j))
+      else:
+        white.append((i, j)) 
+
+bk_count = backtracking(set(), set(), black, 0, 0)
+wh_count = backtracking(set(), set(), white, 0, 0)
+print(bk_count + wh_count)
+
+
+## 예시 입력 Sample Input
+3
+1 0 1 
+0 0 0
+0 1 1 
+
+## 예시 출력 Sample Output
+3
+
+
+## 마무리 Conclusion or Reflection
+이 문제는 코딩의 특성을 이용한다기 보단 조금 머리를 써서 체스, 비숍의 특성을 한번 생각해보아야 하는 문제였다.
+조금더 고민하고 깊게 생각해보았으면 좋았을텐데 백트래킹을 구현하는데에 너무 신경을 써서 겨를이없었다.
+백트래킹에 대해 아직 익숙 하진 않지만 이번 문제를 계기로 더욱 활용에 익숙해졌으면 좋겠다.
+
+This problem was less about programming techniques and more about thinking carefully about the properties of chess and bishops.
+I should have taken more time to think deeply about these properties rather than focusing solely on implementing the backtracking. 
+Although I am still not fully comfortable with backtracking, I hope this problem helps me become more proficient in using it in the future.

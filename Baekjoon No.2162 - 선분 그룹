@@ -1,0 +1,153 @@
+# Baekjoon No.2162 - 선분 그룹
+
+- [문제 링크](https://www.acmicpc.net/problem/2162)
+
+## 문제 설명 Problem Description
+첫째 줄에 N(1 ≤ N ≤ 3,000)이 주어진다. 둘째 줄부터 N+1번째 줄에는 양 끝점의 좌표가 x1, y1, x2, y2의 순서로 주어진다. 각 좌표의 절댓값은 5,000을 넘지 않으며, 입력되는 좌표 사이에는 빈칸이 하나 있다.
+N개의 선분들이 주어졌을 때, 이 선분들은 총 몇 개의 그룹으로 되어 있을까?
+첫째 줄에 그룹의 수를, 둘째 줄에 가장 크기가 큰 그룹에 속한 선분의 개수를 출력한다.
+
+The first line contains an integer N (1 ≤ N ≤ 3,000).
+From the second line to the (N+1)-th line, each line contains four integers x1, y1, x2, y2 representing the endpoints of a line segment, separated by a single space.
+The absolute value of any coordinate does not exceed 5,000. Given these N line segments, determine how many groups of connected line segments exist.
+Two line segments belong to the same group if they intersect directly or indirectly through a chain of intersections. 
+Print the number of groups on the first line, and the number of line segments in the largest group on the second line.
+
+
+## 생각 과정 Thought Process
+1. ** 겹치는 선분 탐색 **
+일단 겹치는 선분 탐색을 해야 하는데 시간복잡도는 약 O(N^2) 으로 모든 경우에 탐색해야 했다. 줄일수 있는지 모색해보았지만 딱히 좋은 아이디어는 떠오르지 않았다.
+보통 CCW로 풀어내지만 이번 교차판별에서는 내가 만든 알고리즘인 cross with rotation 을 사용하였다.
+두 선분의 기울기를 계산하고 기울기의 케이스에 따라 많은 경우가 나오는데 이 두선분이 만난다는 것은 상대적인 위치에 의한 것이므로 
+좌표에 특정수를 곱해 선분의 길이를 조정하거나 회전시켜 케이스를 줄여 판별하는 알고리즘이다.
+
+2. ** 너비우선탐색 **
+유니온 파인드를 사용해도 되지만 너비우선 탐색을 사용하면 더 직관적이고 쉬울 것 같아 길이가 N인 그래프에 각각 선분을 0 ~ N-1 까지 네이밍 후 연결시켰다.
+한번의 bfs탐색에서 도달한 노드의 개수가 서로 겹치는 선분의 개수이고 최대값을 출력하였다.
+bfs가 호출된 횟수가 총 그룹의 개수이므로 len() 함수로 총 그룹의 개수를 출력하였다.
+
+1. ** Finding Intersecting Line Segments **
+First, I needed to find which line segments intersect.
+Since it requires checking all pairs, the time complexity is approximately O(N^2).
+I considered ways to optimize this, but I couldn't come up with any good ideas.
+Typically, problems like this are solved using CCW (Counter Clock Wise), but in this case, I used my own algorithm, "cross with rotation."
+This method calculates the slopes of two segments and classifies cases based on those slopes. 
+Since intersection depends on their relative positions, I adjusted the lengths of the segments by multiplying coordinates by certain constants or rotating them to simplify cases.
+This allowed me to reduce the number of cases I had to check.
+
+2. ** Breadth-First Search (BFS) **
+Although Union-Find could also solve this problem, I found Breadth-First Search (BFS) to be more intuitive and easier to implement.
+I named the segments from 0 to N-1 and considered them as nodes in a graph where edges represent intersections.
+The number of nodes visited in a single BFS traversal represents the size of a connected group of intersecting segments, and I recorded the maximum size.
+The total number of BFS calls corresponds to the total number of groups, so I simply output the length of the list of groups.
+
+
+##코드 설명 Code
+
+```python
+from collections import deque
+
+def cross_with_rotation(x1, y1, x2, y2, x3, y3, x4, y4):
+  # 기울기 분류를 위한 변수
+  xDemo_1, xDemo_2 = x2 - x1, x4 - x3
+  yDemo_1, yDemo_2 = y2 - y1, y4 - y3
+
+  # 정렬
+  def sort_loc(x1, y1, x2, y2, x3, y3, x4, y4):
+    if (x1, y1) > (x2, y2):
+      x1, y1, x2, y2 = x2, y2, x1, y1
+    if (x3, y3) > (x4, y4):
+      x3, y3, x4, y4 = x4, y4, x3, y3
+    return x1, y1, x2, y2, x3, y3, x4, y4
+
+  # 계산 함수
+  def calculation(x1, y1, x2, y2, x3, y3, x4, y4, a, b):
+    if a > b:
+      return False
+    temp_1 = (y2 - y1) * (a - x1) * (x4 - x3) - (y4 - y3) * (a - x3) * (x2 - x1) + (y1 - y3) * (x2 - x1) * (x4 - x3)
+    temp_2 = (y2 - y1) * (b - x1) * (x4 - x3) - (y4 - y3) * (b - x3) * (x2 - x1) + (y1 - y3) * (x2 - x1) * (x4 - x3)
+    if temp_1 * temp_2 <= 0:
+      return True
+    else:
+      return False
+
+  # 겹침 판단
+  def result(x1, y1, x2, y2, x3, y3, x4, y4):
+    extent_x = [max(x1, x3), min(x2, x4)]
+    if calculation(x1, y1, x2, y2, x3, y3, x4, y4, extent_x[0], extent_x[1]):
+      return True
+    return False
+
+  # 두 선분 모두 기울기 = INF 또는 두 선분의 기울기가 각각 INF, 0
+  if yDemo_1 == 0 and yDemo_2 == 0 or xDemo_1 == 0 and yDemo_2 == 0 or xDemo_2 == 0 and yDemo_1 == 0:
+    x1, y1, x2, y2 = x1 - y1, x1 + y1, x2 - y2, x2 + y2
+    x3, y3, x4, y4 = x3 - y3, x3 + y3, x4 - y4, x4 + y4
+
+  # 한 선분만 기울기 INF -> 원점을 기준으로 90도 회전
+  elif xDemo_1 == 0 or xDemo_2 == 0:
+    x1, y1, x2, y2 = y1, -x1, y2, -x2
+    x3, y3, x4, y4 = y3, -x3, y4, -x4
+
+  # 최종 계산
+  x1, y1, x2, y2, x3, y3, x4, y4 = sort_loc(x1, y1, x2, y2, x3, y3, x4, y4)
+  return(result(x1, y1, x2, y2, x3, y3, x4, y4))
+
+# 연결된 선분 탐색
+def bfs(start, visited):
+  queue = deque([start])
+  count = 1
+  visited[start] = True
+  while queue:
+    cur = queue.popleft()
+    for nxt in graph[cur]:
+      if not visited[nxt]:
+        queue.append(nxt)
+        visited[nxt] = True
+        count += 1
+  return count
+
+N = int(input())
+line = []
+
+for _ in range(N):
+  line.append(tuple(map(int, input().split())))
+
+graph = { i : [] for i in range(N) }
+
+# 모든 선분끼리의 겹침여부 탐색
+for i in range(N):
+  x1, y1, x2, y2 = line[i]
+  for j in range(i + 1, N):
+    x3, y3, x4, y4 = line[j]
+    if cross_with_rotation(x1, y1, x2, y2, x3, y3, x4, y4):
+      graph[i].append(j)
+      graph[j].append(i)
+
+visited = [False] * N
+counts = []
+for i in range(N):
+  if not visited[i]:
+    counts.append(bfs(i, visited))
+
+print(len(counts))
+print(max(counts))
+
+
+## 예시 입력 Sample Input
+5
+-1 0 -1 5
+3 2 1 3
+2 3 0 2
+1 2 0 4
+-1 4 7 4
+
+## 예시 출력 Sample Output
+1
+5
+
+## 마무리 Conclusion or Reflection
+지금까지 사용했던 개념을 복기시키는 문제였다. 이문제를 풀면서 나 자신이 만든 알고리즘을 제출했는데 CCW를 적용시켜보기도 했다. 쉬운 난이도의 문제였다.
+
+This problem helped me review and reinforce the concepts I’ve studied so far.
+I also had the opportunity to submit a solution using my self-developed algorithm, although I tried applying CCW as well for comparison.
+Overall, it was a relatively easy-level problem for me.

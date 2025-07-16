@@ -1,0 +1,121 @@
+# Baekjoon No.2568 - 전깃줄 - 2
+
+
+- [문제 링크](https://www.acmicpc.net/problem/2568)
+
+## 문제 설명 Problem Description
+전깃줄이 전봇대에 연결되는 위치는 전봇대 위에서부터 차례대로 번호가 매겨진다.
+전깃줄의 개수와 전깃줄들이 두 전봇대에 연결되는 위치의 번호가 주어질 때, 남아있는 모든 전깃줄이 서로 교차하지 않게 하기 위해 없애야 하는 최소 개수의 전깃줄을 구하는 프로그램을 작성하시오.
+첫째 줄에는 두 전봇대 사이의 전깃줄의 개수가 주어진다. 전깃줄의 개수는 100,000 이하의 자연수이다.
+둘째 줄부터 한 줄에 하나씩 전깃줄이 A전봇대와 연결되는 위치의 번호와 B전봇대와 연결되는 위치의 번호가 차례로 주어진다. 
+위치의 번호는 500,000 이하의 자연수이고, 같은 위치에 두 개 이상의 전깃줄이 연결될 수 없다. 
+첫째 줄에 남아있는 모든 전깃줄이 서로 교차하지 않게 하기 위해 없애야 하는 전깃줄의 최소 개수를 출력한다. 
+둘째 줄부터 한 줄에 하나씩 없애야 하는 전깃줄의 A전봇대에 연결되는 위치의 번호를 오름차순으로 출력한다. 
+만약 답이 두 가지 이상이라면 그 중 하나를 출력한다.
+
+There are two poles, and the positions on each pole where electric wires are connected are numbered from top to bottom in order.
+Given the number of electric wires and the positions on the two poles where each wire is connected, write a program to find the minimum number of wires that must be removed so that no wires cross each other. 
+The first line contains the number of wires, which does not exceed 100,000. 
+From the second line onward, each line contains two integers representing the positions where the wire is connected on pole A and pole B, respectively.
+The position numbers do not exceed 500,000, and no two wires share the same position on either pole.
+On the first line, print the minimum number of wires that must be removed to ensure that no wires cross each other. 
+From the second line onward, print the positions on pole A of the wires to be removed in ascending order. If there are multiple valid answers, you may print any one of them.
+
+
+## 생각 과정 Thought Process
+1. ** LIS **
+전깃줄이 겹치지 않기 위해서는 두 연결된 전선의 전봇대 번호가 A, B 각각 모두 오름차순 또는 내림차순으로 정리 되어 있어야한다.
+그래서 일단 A 전봇대의 번호를 기준으로 정렬 한 후 B에서 LIS를 찾기로 했다.
+
+2. ** 동적계획법 **
+일반적인 O(N^2) DP 는 사용할수 없었다. N이 100,000개 까지 주어지므로 시간초과가 될 것이므로 이분탐색을 이용한 로직을 사용하기로 했다.
+이분탐색을 사용하고 이전 경로를 저장하는 역추적을 이용하여 LIS의 인덱스만 set로 뽑아내어 if ... not in set 로 LIS의 부분이 아닌것만 출력하도록 했다.
+
+1. ** LIS (Longest Increasing Subsequence) **
+In order to prevent the wires from crossing, the connection points on both poles A and B must be sorted in either ascending or descending order. 
+Therefore, I first sorted the wires by their positions on pole A, and then searched for the LIS on pole B.
+
+2. ** Dynamic Programming **
+Since N can be as large as 100,000, the standard O(N²) DP approach was not feasible due to time constraints.
+I used a binary search-based LIS algorithm instead, and tracked the previous indices for backtracking.
+By collecting the indices of the LIS into a set, I was able to print only the wires that are not part of the LIS using a simple if ... not in set condition.
+
+
+##코드 설명 Code
+
+```python
+import bisect
+
+N = int(input())
+
+elecwire = []
+for _ in range(N):
+  elecwire.append(tuple(map(int, input().split())))
+# 전봇대 A 정렬
+elecwire.sort() 
+
+pos = [0] * N   # 이분탐색한 위치 저장
+prev = [-1] * N   # 이전 경로 저장
+LIS = []    # dp 기반 이분탐색 LIS 결과 저장
+for i in range(N):
+  num = elecwire[i][1]
+  cur = bisect.bisect_left(LIS, num)    # dp 결과 내 들어가야 할 인덱스
+  if len(LIS) == cur:   # dp 내 가장 큰수 일 때
+    LIS.append(num)
+  else:
+    LIS[cur] = num
+  pos[i] = cur
+
+  if cur > 0:
+    for j in range(i - 1, -1, -1):
+      if pos[j] == cur - 1:
+        prev[i] = j
+        break
+
+# 역추적을 시작할 위치 선정
+l = len(LIS) - 1
+idx = -1
+for i in range(N - 1, -1, -1):
+  if pos[i] == l:
+    idx = i
+    break
+
+# LIS 인덱스 결과 저장
+result = set()
+while idx != -1:
+  result.add(idx)
+  idx = prev[idx]
+
+# 출력
+print(N - len(result))
+for i in range(N):
+  if i not in result:
+    print(elecwire[i][0])
+
+
+## 예시 입력 Sample Input
+8
+1 8
+3 9
+2 2
+4 1
+6 4
+10 10
+9 7
+7 6
+
+## 예시 출력 Sample Output
+3
+1
+2
+3
+
+
+## 마무리 Conclusion or Reflection
+문제 해결을 위한 구상은 쉬웠지만 DP를 사용하는것에 대해서 생각이 많았다. 
+LIS를 그대로 출력하기 위해서는 O(N^2) 의 DP를 사용해야 하는데 이는 시간초과이고 만약 bisect 를 이용한 LIS를 구하면 LIS의 기본 모델이 되지 않을수 있었다.
+따라서 역추적을 사용했는데 꽤나 까다로웠다. 역추적에는 조금더 연습이 필요해 보인다.
+
+The overall idea was straightforward, but I spent some time considering how to handle the DP. Using O(N²) DP would allow easy reconstruction of the LIS, but it’s too slow. 
+Using binary search with bisect makes reconstruction trickier, so I had to use backtracking, which was somewhat challenging.
+I realized I need more practice with this kind of backtracking.

@@ -1,0 +1,125 @@
+# Baekjoon No.2887 - 행성 터널
+
+- [문제 링크](https://www.acmicpc.net/problem/2887)
+
+
+## 문제 설명 Problem Description
+N개의 행성으로 이루어져 있다. 행성을 연결하는 터널을 만들려고 한다.
+행성은 3차원 좌표위의 한 점으로 생각하면 된다. 두 행성 A(xA, yA, zA)와 B(xB, yB, zB)를 터널로 연결할 때 드는 비용은 min(|xA-xB|, |yA-yB|, |zA-zB|)이다.
+터널을 총 N-1개 건설해서 모든 행성이 서로 연결되게 하려고 한다. 이때, 모든 행성을 터널로 연결하는데 필요한 최소 비용을 구하는 프로그램을 작성하시오.
+첫째 줄에 행성의 개수 N이 주어진다. (1 ≤ N ≤ 100,000) 다음 N개 줄에는 각 행성의 x, y, z좌표가 주어진다. 좌표는 -109보다 크거나 같고, 109보다 작거나 같은 정수이다. 
+한 위치에 행성이 두 개 이상 있는 경우는 없다. 
+첫째 줄에 모든 행성을 터널로 연결하는데 필요한 최소 비용을 출력한다.
+
+There are N planets. We want to construct tunnels to connect the planets. Each planet can be thought of as a point in three-dimensional space. 
+The cost to connect two planets A(xA, yA, zA) and B(xB, yB, zB) with a tunnel is min(|xA-xB|, |yA-yB|, |zA-zB|). 
+We aim to build a total of N-1 tunnels to ensure that all planets are interconnected.
+In this case, we need to write a program that calculates the minimum cost required to connect all the planets with tunnels.
+The first line gives the number of planets N. (1 ≤ N ≤ 100,000) The next N lines provide the x, y, z coordinates of each planet. 
+The coordinates are integers that are greater than or equal to -10^9 and less than or equal to 10^9. 
+There are no more than one planet at the same position. 
+The first line outputs the minimum cost required to connect all the planets with tunnels.
+
+## 생각 과정 Thought Process
+1. ** 건설 비용 계산 및 정렬 **
+모든 건설 케이스에 대해 비용을 계산하는 건 시간적, 메모리적 한계가 있다고 판단했다.
+그래서 건설 비용의 최소값을 나열하기 위해 3차원 공간에서 x, y, z의 입력을 따로받고 정렬하여 각각 인접한 것들은 1차적으로 최소값으로 분류했다.
+
+2. ** 유니온-파인드 **
+모든 간선들에 대해 터널을 건설시 모든 행성에 도달할 수 있다는 것을 깨달았다.
+여기서 중요한것은 필요하지 않은 간선들을 제거하는 것인데 이것을 감지하기위해 유니온-파인드를 사용하였다.
+
+3. ** 간선 저장 **
+추가한 모든 간선에 대해 비용순으로 정렬후 꺼내어 추가시 사이클이 감지되지 않으면 채택했다.
+
+1. ** Construction Cost Calculation and Sorting **
+I determined that calculating costs for all construction cases has temporal and memory limitations. 
+Therefore, to list the minimum construction costs, I received inputs for x, y, and z separately in a three-dimensional space, 
+sorted them, and classified those that were adjacent as primary minimum values.
+
+2. ** Union-Find **
+I realized that constructing tunnels would allow access to all planets for all edges.
+The important thing here is to eliminate unnecessary edges, and for this, I used the union-find algorithm.
+
+3. ** Edge Storage **
+After sorting all added edges by cost, I retrieved them and adopted them if no cycle was detected during the addition.
+
+
+##코드 설명 Code
+
+```python
+# 행성 터널 건설 비용
+def weight(a, b):
+    return abs(a - b)
+
+# 유니온-파인드 함수
+def find(x):
+    if parent[x] != x:
+        parent[x] = find(parent[x])
+    return parent[x]
+
+def union(x, y):
+    x_root = find(x)
+    y_root = find(y)
+    if x_root == y_root:
+        return False
+    parent[y_root] = x_root
+    return True
+
+N = int(input())
+x, y, z = [], [], []
+
+# 정렬 위해 x, y, z를 따로 입력, 인덱스 정보 저장
+for i in range(N):
+    x1, y1, z1 = map(int, input().split())
+    x.append((x1, i))
+    y.append((y1, i))
+    z.append((z1, i))
+x.sort()
+y.sort()
+z.sort()
+
+# 각 간선 정보 저장
+edges = []
+for i in range(N-1):
+    edges.append((weight(x[i][0], x[i+1][0]), x[i][1], x[i+1][1]))
+    edges.append((weight(y[i][0], y[i+1][0]), y[i][1], y[i+1][1]))
+    edges.append((weight(z[i][0], z[i+1][0]), z[i][1], z[i+1][1]))
+edges.sort()
+
+parent = [i for i in range(N + 1)]
+result = 0
+# 비용 오름차순으로 정리된 간선에 대해 사이클이 만들어지지 않으면 선택
+for edge in edges:
+    w, a, b = edge
+    if not union(a, b):
+        continue
+    else:
+        result += w
+
+print(result)
+
+
+## 예시 입력 Sample Input
+5
+11 -15 -15
+14 -5 -15
+-1 -1 -5
+10 -4 -1
+19 -4 19
+
+## 예시 출력 Sample Output
+4
+
+
+## 마무리 Conclusion or Reflection
+풀기전에 생각을 많이했던 문제였다. 무슨수로 모든 간선의 가중치를 계산하지 않고 필요한 것들만 가져올수 있을까.
+그리고 어떻게 간선들을 선택할 것인가 등 방향성에 대해 많이 생각했던것 같다.
+그리고 x,y,z로 분리 입력 후 이를 정렬 했을때 인접한 점에 대해 간선을 추가하면 과연 이 모든 간선들이 연결되었을 때 모든 행성을 연결할 수 있는가와 같은 생각도 많이했다.
+방향성을 잡고 나서 구현 할 때는 어렵지 않게 풀렸다.
+
+It was a problem that I thought a lot about before solving.
+How could I take only the necessary ones without calculating the weights of all edges? 
+I also thought a lot about how to select the edges and other directional aspects. 
+After separating the inputs into x, y, and z and sorting them, I also considered whether all these edges could connect all the planets when added for adjacent points. 
+Once I had established the direction, it was not difficult to implement.

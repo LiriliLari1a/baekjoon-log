@@ -1,0 +1,108 @@
+# Baekjoon No.25333 - 사회망 서비스(SNS)
+
+- [문제 링크](https://www.acmicpc.net/problem/2533)
+
+
+## 문제 설명 Problem Description
+친구 관계 트리가 주어졌을 때, 모든 개인이 새로운 아이디어를 수용하기 위하여 필요한 최소 얼리 어답터의 수를 구하는 프로그램을 작성하시오.
+얼리 아답터가 아닌 사람들은 자신의 모든 친구들이 얼리 아답터일 때만 이 아이디어를 받아들인다.
+첫 번째 줄에는 친구 관계 트리의 정점 개수 N이 주어진다. 단, 2 ≤ N ≤ 1,000,000이며, 각 정점은 1부터 N까지 일련번호로 표현된다. 
+두 번째 줄부터 N-1개의 줄에는 각 줄마다 친구 관계 트리의 에지 (u, v)를 나타내는 두 정수 u와 v가 하나의 빈칸을 사이에 두고 주어진다. 
+주어진 친구 관계 그래프에서 아이디어를 전파하는데 필요한 얼리 아답터의 최소 수를 하나의 정수로 출력한다.
+
+In a social network represented as a tree structure of friendships, we want to spread a new idea to everyone.
+To do this efficiently, we define the concept of an Early Adopter:
+If a person is not an Early Adopter, all their friends must be Early Adopters for them to accept the idea.
+If a person is an Early Adopter, they can accept the idea regardless of their friends.
+You are given a tree representing friendships between N people. 
+Your task is to compute the minimum number of Early Adopters required so that the idea is spread to every person in the network.
+
+
+## 생각 과정 Thought Process
+1. ** 그래프 **
+일단은 노드 입력을 통해 친구 관계가 주어지면 그래프를 이용해 부모-자식간의 관계를 나타냈다.
+
+2. ** 노드의 개수 **
+처음에는 노드의 개수를 이용하여 문제를 해결하려했다. 처음에는 모두가 얼리어답터라고 가정하고 얼리어답터가 아닌 사람을 찾아내는 식이었다.
+각 그래프의 길이를 리스트에 저장하고 그래프의 부모를 하나씩 돌며 부모의 모든자식들의 길이에 1씩 뺏을때 0이되면 continue, 아니라면 result에 추가하였다.
+그후 N - len(result) 를 출력하였는데 이는 어떤 노드의 부모와 자식모두 얼리어답터여야 한다는 사실에 위배되었다.
+
+3. ** 동적계획법 **
+어떻게 구현할지 막막하여 찾아보던 와중 동적계획법으로 푼다는 것을 깨달았다.
+DFS 기반 동적 계획법이었는데 (N+1)*2 의 DP 배열로 각 얼리어답터인경우, 얼리어답터가 아닌 경우로 나누어진 리스트 동적계획법으로 푸는 것이었다.
+사실 처음에 같은 방식으로 동작하는 (N+1)*2 DP 배열을 생각해봤었다. 복잡해서 다른 방법을 찾았는데 이게 맞던것이어서 조금 당황스러웠다.
+부모가 얼리어답터가 아니면 자식은 무조건 얼리어답터이고 그반대면 자식은 둘중 작은걸 선택하는 방식으로 구현된다.
+
+1. ** Graph Construction **
+Initially, I built the graph using the given friend relationships, representing them as parent-child connections.
+
+2. ** Node Count Approach **
+At first, I tried to solve the problem using the number of nodes. I assumed that everyone was an early adopter and then attempted to identify those who weren't.
+I stored the length of each graph (number of connections) in a list and iterated over each parent node. For each parent, I subtracted 1 from the count of all their children. If the result was 0, I continued; otherwise, I added the node to the result list.
+Then I printed N - len(result). However, I later realized this approach violated a key condition of the problem: that a node is valid only if either the node or all of its adjacent nodes are early adopters.
+
+3. ** Dynamic Programming **
+I was unsure how to implement the correct logic until I found out that the problem can be solved using dynamic programming.
+The DP is based on DFS traversal, with a (N+1) x 2 DP table where each node has two states: one for when it's an early adopter and one for when it’s not.
+Interestingly, I had initially considered a similar DP table structure but abandoned it due to its complexity. I was surprised to find out that this was actually the correct approach.
+The idea is simple:
+If a node is not an early adopter, then all its children must be early adopters.
+If a node is an early adopter, then its children can be either, and we take the minimum of both states for each child.
+
+
+##코드 설명 Code
+
+```python
+import sys
+sys.setrecursionlimit(10**9)
+
+N = int(input())
+Tree = { i : [] for i in range(1, N + 1) }
+
+# 트리 부모-자식 입력
+for i in range(N - 1):
+    u, v = map(int, input().split())
+    Tree[u].append(v)
+    Tree[v].append(u)
+
+# DFS 기반 DP
+dp = [[0, 0] for _ in range(N + 1)]
+visited = [False] * (N + 1)
+
+def DFS(node):
+    visited[node] = True
+    dp[node][0] = 0     # 해당 노드가 얼리어답터가 아님
+    dp[node][1] = 1     # 해당 노드가 얼리어답터임
+    for child in Tree[node]:
+        if visited[child]:
+            continue
+        DFS(child)
+        # 부모가 얼리어답터가 아니면 자식은 무조건 얼리어답터임
+        dp[node][0] += dp[child][1]
+        # 부모가 얼리어답터이면 자식은 둘중 하나임
+        dp[node][1] += min(dp[child][0], dp[child][1])
+DFS(1)
+print(min(dp[1][0], dp[1][1]))
+
+
+## 예시 입력 Sample Input
+9
+1 2
+1 3
+2 4
+3 5
+3 6
+4 7
+4 8
+4 9
+
+## 예시 출력 Sample Output
+3
+
+
+## 마무리 Conclusion or Reflection
+문제의 해답을 알고 난후 조금 아쉬웠다. 원래 갖고 있던 방향으로 가지고 갔으면 풀었을 것도 같은데 조금더 집요함이 부족했던것같다.
+생각보다 코드가 짧고 간단해서 배우기에 어렵지 않은 코드였다.
+
+Once I understood this, I felt a bit disappointed—had I stuck with my original idea and pursued it more persistently, I might have solved it.
+The final code turned out to be much shorter and simpler than I expected, which makes it a great problem for learning.

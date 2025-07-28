@@ -28,6 +28,8 @@ If they do not intersect at a single point (e.g., they are collinear and overlap
 CCW 보다 더욱 알고리즘적인 움직임이 조금더 해체되어있는 코드인데 따라서 선분의 위치 그리고 선분의 기울기 등을 파악해서 교차점을 판단하기 쉬울것이라고 생각했다.
 다만 Cross With Rotation의 코드를 일부 변경하여 shape 라는 변수를 집어넣고 [0 : 한점에서 만날수 없음 / 1 : 한점에서 만날수도 있음 / 2 : 한점에서 만남] 으로 판별했다.
 해당 선분들이 모두 만나는지에 관해서는 따로 본래 알고리즘에서 건들지 않았다.
+CWR description link - (https://github.com/LiriliLari1a/Algorithmic-Patterns-I-Discovered/blob/main/cross%20with%20rotation)
+
 
 2. ** 교차점 출력 **
 교차점을 출력하려면 어쩔수 없이 float 연산을 사용해야 했다. 

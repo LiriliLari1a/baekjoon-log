@@ -1,0 +1,63 @@
+x1, y1, x2, y2 = map(int, input().split())
+x3, y3, x4, y4 = map(int, input().split())
+
+def crossed_line(x1, y1, x2, y2, x3, y3, x4, y4):
+  # 기울기 분류를 위한 변수
+  xDemo_1, xDemo_2 = x2 - x1, x4 - x3
+  yDemo_1, yDemo_2 = y2 - y1, y4 - y3
+
+  # 두 선분의 기울기로 shape 변수 설정
+  # shape => 한 점에서 만날수 있는지 여부
+  if xDemo_1 * yDemo_2 == xDemo_2 * yDemo_1:
+      shape = False
+  else:
+      shape = True
+  # 정렬
+  def sort_loc(x1, y1, x2, y2, x3, y3, x4, y4):
+    if (x1, y1) > (x2, y2):
+      x1, y1, x2, y2 = x2, y2, x1, y1
+    if (x3, y3) > (x4, y4):
+      x3, y3, x4, y4 = x4, y4, x3, y3
+    return x1, y1, x2, y2, x3, y3, x4, y4
+
+  # 계산 함수
+  def calculation(x1, y1, x2, y2, x3, y3, x4, y4, a, b):
+    if a > b:
+      return False, shape
+    temp_1 = (y2 - y1) * (a - x1) * (x4 - x3) - (y4 - y3) * (a - x3) * (x2 - x1) + (y1 - y3) * (x2 - x1) * (x4 - x3)
+    temp_2 = (y2 - y1) * (b - x1) * (x4 - x3) - (y4 - y3) * (b - x3) * (x2 - x1) + (y1 - y3) * (x2 - x1) * (x4 - x3)
+    if temp_1 * temp_2 <= 0:
+      return True, shape
+    else:
+      return False, shape
+
+  # 겹침 판단
+  def result(x1, y1, x2, y2, x3, y3, x4, y4):
+    extent_x = [max(x1, x3), min(x2, x4)]
+    return calculation(x1, y1, x2, y2, x3, y3, x4, y4, extent_x[0], extent_x[1])
+
+  # 두 선분 모두 기울기 = INF 또는 두 선분의 기울기가 각각 INF, 0
+  if yDemo_1 == 0 and yDemo_2 == 0 or xDemo_1 == 0 and yDemo_2 == 0 or xDemo_2 == 0 and yDemo_1 == 0:
+    x1, y1, x2, y2 = x1 - y1, x1 + y1, x2 - y2, x2 + y2
+    x3, y3, x4, y4 = x3 - y3, x3 + y3, x4 - y4, x4 + y4
+
+  # 한 선분만 기울기 INF -> 원점을 기준으로 90도 회전
+  elif xDemo_1 == 0 or xDemo_2 == 0:
+    x1, y1, x2, y2 = y1, -x1, y2, -x2
+    x3, y3, x4, y4 = y3, -x3, y4, -x4
+
+  # 최종 계산
+  x1, y1, x2, y2, x3, y3, x4, y4 = sort_loc(x1, y1, x2, y2, x3, y3, x4, y4)
+  return(result(x1, y1, x2, y2, x3, y3, x4, y4))
+
+b, shape = crossed_line(x1, y1, x2, y2, x3, y3, x4, y4)
+if not b:
+    print(0)
+else:
+    print(1)
+    if shape:
+        xloc_under = (y2 - y1) * (x4 - x3) - (y4 - y3) * (x2 - x1)
+        xloc_over = x1 * (x4 - x3) * (y2 - y1) - x3 * (x2 - x1) * (y4 - y3) + (y3 - y1) * (x2 - x1) * (x4 - x3)
+        yloc_under = (x2 - x1) * (y4 - y3) - (x4 - x3) * (y2 - y1)
+        yloc_over = y1 * (x2 - x1) * (y4 - y3) - y3 * (x4 - x3) * (y2 - y1) + (x3 - x1) * (y2 - y1) * (y4 - y3)
+        print(abs(xloc_over / xloc_under), abs(yloc_over / yloc_under))

@@ -1,0 +1,94 @@
+# Baekjoon No.14725 - 개미굴
+
+- [문제 링크](https://www.acmicpc.net/problem/14725)
+
+
+## 문제 설명 Problem Description
+로봇 개미는 아래로 내려가는 길을 따라 내려가는데 더이상 내려갈곳이 없으면 신호를 보낸다.
+첫 번째 줄은 로봇 개미가 각 층을 따라 내려오면서 알게 된 먹이의 정보 개수 N (1 ≤ N ≤ 1000)개가 주어진다.
+두 번째 줄부터 N+1 번째 줄까지, 각 줄의 시작은 로봇 개미 한마리가 보내준 먹이 정보 개수 K (1 ≤ K ≤ 15)가 주어진다.
+다음 K개의 입력은 로봇 개미가 왼쪽부터 순서대로 각 층마다 지나온 방에 있는 먹이 정보이며 먹이 이름 길이 t는 1 ≤ t ≤ 15를 만족한다. 먹이 정보는 알파벳 대문자로만 이루어져 있다.
+개미굴의 시각화된 구조를 출력하여라.
+개미굴의 각 층을 "--" 로 구분하며, 같은 층에 여러개의 방이 있을 때에는 사전 순서가 앞서는 먹이 정보가 먼저 나온다.
+최상위 굴을 포함하여 하나의 굴에서 개미굴이 여러개로 나뉠 때 먹이 종류별로 최대 한 번만 나올 수 있다.
+
+A robotic ant travels downward through a network of tunnels, collecting information about the food it encounters at each level. 
+When it can no longer proceed, it sends back a signal containing the list of food items it saw along the way.
+The first line of input gives the number of paths, N (1 ≤ N ≤ 1000), that the ant explored. Each of the next N lines starts with an integer K (1 ≤ K ≤ 15),
+representing the number of food items the ant observed on that particular path. This is followed by K food names in order, from top to bottom. 
+Each food name consists of uppercase English letters and has a length of 1 to 15 characters.
+The goal is to display a visual representation of the ant tunnels, showing the hierarchy of food levels the ants encountered.
+Each depth level should be represented with "--" per level of indentation. If multiple food items exist on the same level, they must be listed in lexicographical (dictionary) order.
+No food item should appear more than once at the same level from the same root path.
+
+
+## 생각 과정 Thought Process
+1. ** 트리 구성 **
+입력을 받아서 트리를 구성해야 하는데 무슨 자료구조를 사용할지 생각을 많이 해 보았다.
+딕셔너리안에 딕셔너리를 계속 넣어서 트리를 만들기로 했다.
+
+2. ** 정렬 **
+트리를 구성하는 것 보다 정렬 하는것이 더 어려웠다.
+sorted(tree) 만으로 모든 트리 구성을 정렬 시킬수는 없으므로 깊이우선탐색으로 키를 모두 찾은 뒤에 그 키에 해당하는 부분들을 받아서 정렬 해야 하나 싶었다.
+하지만 반복적인 sorted() 함수의 호출 가능성을 보고 어떻게 해결해야 할지 막막해서 인터넷을 찾아보았다.
+생각보다 출력코드는 간단했는데 for 루프에서 미리 불러낼 같은 깊이의 값들을 정렬시켜놓고 다시 그 값들을 재귀하여 출력하는 방식이었다.
+
+1. ** Tree Construction **
+To construct the tree from the input, I spent some time considering the most suitable data structure. Eventually, 
+I decided to build the tree using nested dictionaries, where each node is represented as a dictionary and its children are nested dictionaries within it.
+
+2. ** Sorting **
+Sorting the tree was more challenging than constructing it. Using just sorted(tree) wasn’t enough to sort the entire tree recursively. 
+At first, I thought I might have to perform a depth-first traversal, gather all the keys at each level, and sort them before continuing.
+However, I realized that repeatedly calling sorted() could lead to inefficient code and wasn't sure how to proceed. After searching online, I discovered that the solution was simpler than expected. 
+The idea was to recursively print each level of the tree, but sort the keys at each level before printing. This avoids the need to sort the entire structure in advance.
+
+
+##코드 설명 Code
+
+```python
+# 재귀를 통해 정렬된 트리 출력
+def print_tree(d, depth=0):
+    for key in sorted(d.keys()):
+        print('--' * depth + key)
+        print_tree(d[key], depth + 1)
+
+N = int(input())
+tree = {}
+
+for _ in range(N):
+  line = input().split()
+  current = tree
+  # 딕셔너리 안에 딕셔너리를 생성하여 트리를 채움
+  for i in range(1, len(line)):
+    item = line[i]
+    if item not in current:
+      current[item] = {}
+    current = current[item]
+
+print_tree(tree, 0)
+
+
+## 예시 입력 Sample Input
+4
+2 K B
+2 K A
+2 A A
+3 A B K
+
+## 예시 출력 Sample Output
+A
+--A
+--B
+----K
+K
+--A
+--B
+
+## 마무리 Conclusion or Reflection
+어려운 문제는 아니었지만 생각할 것이 많았다. 어떻게 하면 효율적으로 트리를 구성할지, 그리고 어떻게 하면 효율적으로 정렬을 할지.
+생각보다 코드가 길거나 복잡하진 않았지만 많은 것을 배우게 해준 문제이다.
+
+This wasn’t a particularly difficult problem, but it involved a lot of thoughtful decisions.
+I had to consider how to build the tree efficiently, and how to sort it effectively during output. 
+Even though the final code wasn’t long or complex, it taught me a lot about structuring recursive data and handling sorted traversal.

@@ -31,9 +31,9 @@ Print a single line containing the maximum number of people whose home and offic
 최소힙으로 처음에 구현을 했는데 코드가 꼬이는 것 같아서 최대힙을 사용하기로 했다.
 
 2. ** 로직 **
-일단 철로는 양방향이므로 처음 입력시에 start - end 로 오름차순이 되도록 정렬 후 저장했다.
+일단 철로는 양방향이므로 처음 입력시에 start -> end 로 오름차순이 되도록 정렬 후 저장했다.
 그리고 모든 주어진 철로들을 내림차순으로 정렬후 순서대로 철로를 꺼내어 끝점을 heap 에 최대힙으로 삽입하고 [시작점, 시작점 + d] 의 범위에 들어오지 않는 철로는 모두 꺼냈다.
-꺼내는 작업을 완료 한 후 amx_count 로 기존 max_count와 len(heap) 을 비교하여 더 큰 값을 저장했다.
+꺼내는 작업을 완료 한 후 max_count 로 기존 max_count와 len(heap) 을 비교하여 더 큰 값을 저장했다.
 
 1. ** heap **
 At first, it took me a while to come up with the idea of using a heap for this problem. I considered whether it might be possible to solve it with coordinate compression or some other approach.

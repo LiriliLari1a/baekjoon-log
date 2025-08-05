@@ -1,0 +1,104 @@
+# Baekjoon No.13334 - 철로
+
+- [문제 링크](https://www.acmicpc.net/problem/13334)
+
+## 문제 설명 Problem Description
+집과 사무실을 통근하는 n명의 사람들이 있다. 각 사람의 집과 사무실은 수평선 상에 있는 서로 다른 점에 위치하고 있다. 임의의 두 사람 A, B에 대하여, A의 집 혹은 사무실의 위치가 B의 집 혹은 사무실의 위치와 같을 수 있다. 
+통근을 하는 사람들의 편의를 위하여 일직선 상의 어떤 두 점을 잇는 철로를 건설하여, 기차를 운행하려고 한다.
+제한된 예산 때문에, 철로의 길이는 d로 정해져 있다. 집과 사무실의 위치 모두 철로 선분에 포함되는 사람들의 수가 최대가 되도록, 철로 선분을 정하고자 한다.
+양의 정수 d와 n 개의 정수쌍, (hi, oi), 1 ≤ i ≤ n,이 주어져 있다. 여기서 hi와 oi는 사람 i의 집과 사무실의 위치이다. 길이 d의 모든 선분 L에 대하여, 집과 사무실의 위치가 모두 L에 포함되는 사람들의 최대 수를 구하는 프로그램을 작성하시오.
+입력은 표준입력을 사용한다. 첫 번째 줄에 사람 수를 나타내는 양의 정수 n (1 ≤ n ≤ 100,000)이 주어진다. 다음 n개의 각 줄에 정수 쌍 (hi, oi)가 주어진다. 
+여기서 hi와 oi는 −100,000,000이상, 100,000,000이하의 서로 다른 정수이다. 마지막 줄에, 철로의 길이를 나타내는 정수 d (1 ≤ d ≤ 200,000,000)가 주어진다.
+출력은 표준출력을 사용한다. 길이 d의 임의의 선분에 대하여, 집과 사무실 위치가 모두 그 선분에 포함되는 사람들의 최대 수를 한 줄에 출력한다.  
+
+There are n people who commute between their home and office, each located at different points along a horizontal line. 
+For any two people A and B, A's home or office may be located at the same position as B's home or office.
+To assist these commuters, a railway line of fixed length d will be constructed between any two points on this line. A train will operate along this railway segment.
+The goal is to find the maximum number of people whose both home and office locations are within this railway segment (i.e., a segment of length d on the line).
+You are given an integer d and n pairs of integers (hi, oi), representing the home and office positions of person i.
+You are to determine, over all possible segments of length d, the maximum number of people whose home and office positions are both inside the segment.
+The first line contains a single integer n (1 ≤ n ≤ 100,000), the number of people.
+The next n lines each contain two integers hi and oi (−100,000,000 ≤ hi, oi ≤ 100,000,000), representing the home and office locations of person i.
+The last line contains a single integer d (1 ≤ d ≤ 200,000,000), the length of the railway segment.
+Print a single line containing the maximum number of people whose home and office both lie within some segment of length d.
+
+
+## 생각 과정 Thought Process
+1. ** 힙 **
+처음에 이문제를 보고 힙을 생각하는 것 까지의 시간이 좀 걸렸다. 좌표압축으로 풀수도 있었을것 같고 다른 여러가지 방법도 있었을 것 같다.
+하지만 가장 쉬운방법은 아무래도 모든 철로를 시작점으로 정하면서 일정 범위에 들어오지 못한 철로들을 제외시키도록 힙을 사용하는 것인것 같아서 힙을 사용하기로 했다.
+힙을 사용한다고 해도 최소힙을 사용해야 할지 최대힙을 사용해야 할지 고민했다.
+최소힙으로 처음에 구현을 했는데 코드가 꼬이는 것 같아서 최대힙을 사용하기로 했다.
+
+2. ** 로직 **
+일단 철로는 양방향이므로 처음 입력시에 start - end 로 오름차순이 되도록 정렬 후 저장했다.
+그리고 모든 주어진 철로들을 내림차순으로 정렬후 순서대로 철로를 꺼내어 끝점을 heap 에 최대힙으로 삽입하고 [시작점, 시작점 + d] 의 범위에 들어오지 않는 철로는 모두 꺼냈다.
+꺼내는 작업을 완료 한 후 amx_count 로 기존 max_count와 len(heap) 을 비교하여 더 큰 값을 저장했다.
+
+1. ** heap **
+At first, it took me a while to come up with the idea of using a heap for this problem. I considered whether it might be possible to solve it with coordinate compression or some other approach.
+However, I concluded that the simplest method would be to treat every potential segment starting point as the start of the railway, and exclude the rails (people) that don't fall within the valid range.
+For this, a heap seemed like a natural fit.
+I wasn’t sure whether to use a min-heap or a max-heap. I initially implemented it with a min-heap, but the code started to feel messy and confusing. So I decided to switch to a max-heap instead.
+
+2. ** logic **
+Since the railway is bidirectional, I first made sure to store each segment as a sorted pair (start, end) so that start <= end.
+Then, I sorted all segments (people) based on their end positions in descending order. 
+For each one, I inserted the end point into a max-heap, and continuously removed any segments whose start points were no longer within the [end - d, end] range.
+After filtering out the invalid entries, I updated the max_count by comparing the current heap size with the previous maximum.
+
+
+##코드 설명 Code
+
+```python
+import heapq
+
+# 입력 받은 값을 오름차순으로 정렬
+def srt(a, b):
+  if a > b:
+    return b, a
+  else:
+    return a, b
+
+n = int(input())
+rails = []
+
+for _ in range(n):
+  h, o = map(int, input().split())
+  a, b = srt(h, o)
+  rails.append((a, b))
+d = int(input())
+# 내림차순으로 정렬
+rails.sort(reverse = True)
+
+max_count = 0   # heap의 최대 길이 저장
+heap = []   # 최대 heap
+available = 0   # 철로 포함 가능 길이
+for s, e in rails:
+  available = - (s + d)   # min heap 이므로 음수로 비교
+  heapq.heappush(heap, -e)
+  # s부터 시작된 철로를 건설한다고 할 때 가능한 값들만 heap에 남김
+  while heap and heap[0] < available:
+    heapq.heappop(heap)
+  # 가능한 값들이 담긴 heap의 길이중 최대를 찾음
+  max_count = max(max_count, len(heap))
+
+print(max_count)
+
+
+## 예시 입력 Sample Input
+5
+-5 5
+30 40
+-5 5
+50 40
+5 -5
+10
+
+## 예시 출력 Sample Output
+5
+
+## 마무리 Conclusion or Reflection
+간단한 코드로 구현 할수 있었던 문제였다. 정렬 과정과 최대힙을 사용해야 한다는 생각까지 도달하기에 조금 걸렸지만 오랜만에 힙을 사용해 봄으로서 리뷰하는 문제였다.
+
+This was a relatively simple problem to implement. While it took me a bit of time to arrive at the sorting and max-heap strategy, it was a nice problem to review how heaps work after a while.

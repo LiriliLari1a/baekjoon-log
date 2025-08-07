@@ -1,0 +1,89 @@
+# Baekjoon No.16565 - N포커
+
+- [문제 링크](https://www.acmicpc.net/problem/16565)
+
+
+## 문제 설명 Problem Description
+포카드 (four of a kind)는 뽑은 N장의 카드 중에 "같은 숫자를 가진, 다른 문양의 4장의 카드"가 존재하는 경우를 의미한다. 또한 플레이어가 이기는 경우의 수는 N장의 카드에 이러한 카드 조합을 1쌍 이상 포함하고 있는 경우의 수를 의미한다.
+첫째 줄에 뽑는 카드의 수 N이 주어진다. (1 ≤ N ≤ 52)
+첫째 줄에 N장의 카드를 뽑았을 때, 플레이어가 이기는 경우의 수를 10,007로 나눈 나머지를 출력하라.
+
+A Four of a Kind is defined as a group of 4 cards that have the same rank but different suits among the N cards drawn.
+A player is said to win if there is at least one Four of a Kind combination in the N cards drawn.
+The first line contains an integer N, the number of cards drawn. (1 ≤ N ≤ 52)
+Print the number of ways the player can win, modulo 10,007, based on the value of N.
+
+
+## 생각 과정 Thought Process
+1. ** 조합 **
+포커로 이기는 경우의 수는 조합이므로 조합을 통한 계산을 해야 하겠다고 생각했다.
+포함-배제의 원리로 풀지 아니면 다른 방법을 사용할지 고민을 하다 포함-배제의 원리를 응용하기로 했다.
+
+2. ** 수학 **
+노트에 규칙성을 메모 하다가 가장 중요한것은 불필요하게 추가된 경우의 수를 잘 찾아서 제거하는 것이었다.
+이것을 푸는데에 시간이 많이 걸렸지만 확률과 통계의 일부를 연습한다 치고 조금 깊게 들어가서 공부해보았다.
+규칙성을 메모하니 가장 풀기에 최적화된 방법은 만들수 있는 가장 많은 포커의 수부터 포커의 수를 1씩 줄여나가며 combination 연산을 하는 것이였다.
+1부터 최대 까지 오름차순으로 구하는것이 아닌 내림차순으로 구하는 이유는 포함-배제의 원리로 풀기 쉽기 때문인데 만약 최대 4개의 포커쌍을 만들수 있다고 치자.
+4개의 포커쌍의 경우의 수를 구한 경우의 수는 무조건 4개의 포커쌍으로만 이루어진다.
+3개의 포커쌍의 경우의 수를 구한 경우의 수는 3개 또는 4개의 포커쌍으로 이루어지므로 이전에 구한 4개의 포커쌍의 경우의 수를 구한 경우의 수를 빼면 3개의 포커쌍만으로 이루어진 경우의 수를 구할수 있다.
+2개의 포커쌍의 경우의 수를 구한 경우의 수는 2개, 3개 또는 4개의 포커쌍으로 이루어지므로 result에 저장된 3개 4개의 포커쌍만으로 이루어진 경우의 수를 구한 값에서 빼면된다.
+이렇게 따라 내려가며 1개의 포커쌍의 경우까지 내려오면 결과가 나온다.
+
+1. ** Combinations **
+I figured that the number of winning poker hands is a matter of combinations, so it made sense to approach this using combinatorial calculations.
+I considered whether to solve this using the principle of inclusion-exclusion or some other method, and eventually decided to apply the inclusion-exclusion principle.
+
+2. ** Math **
+While jotting down patterns in my notes, I realized the most important part was identifying and subtracting any unnecessarily counted cases.
+It took me a while to solve this part, but I treated it as a good chance to practice some probability and statistics, and decided to study the idea more deeply.
+After analyzing the patterns, I found the most optimized way to solve the problem was to start with the maximum possible number of four-of-a-kind sets and decrease the number one by one, calculating combinations at each step.
+The reason for working in descending order rather than ascending (from 1 to max) is because it's easier to apply the inclusion-exclusion principle this way.
+For example, suppose the maximum number of four-of-a-kind sets we can make is 4.
+The number of cases with exactly 4 sets of four-of-a-kind is counted directly.
+When calculating the number of cases with 3 four-of-a-kind sets, that count includes hands with 3 or more, so we subtract the previously counted number of 4-set hands.
+Similarly, the count of 2 four-of-a-kind hands includes 2, 3, and 4 sets, so we subtract the values already stored in the result for 3 and 4 sets.
+We continue this down to 1 four-of-a-kind set, and finally arrive at the correct result.
+
+
+##코드 설명 Code
+
+```python
+import math
+
+MOD = 10007
+
+N = int(input())
+
+result = 0
+currentpoker = N // 4   # 최대 만들 수 있는 포커 개수
+prev_value = 0
+# 포커의 개수가 1개 까지
+while currentpoker > 0:
+  remain = N - currentpoker * 4   # 지정된 포커카드 외의 카드 개수
+  total = 52 - currentpoker * 4   # 선택할 수 있는 카드 개수
+  # 남은 카드가 음수 일시 종료
+  if total < 0 or remain < 0:
+    break
+  # 포커 카드가 currnetpoker개인 경우만 구함
+  current_value = (math.comb(13, currentpoker) * math.comb(total, remain) - prev_value)
+  result += current_value - prev_value
+  prev_value = result
+  currentpoker -= 1
+
+print(result % MOD)
+
+
+## 예시 입력 Sample Input
+29
+
+## 예시 출력 Sample Output
+5488
+
+
+## 마무리 Conclusion or Reflection
+조금 시간이 걸린 문제였다. 문제를 풀만한 아이디어를 생각해 내는 것에서도 시간이 조금 걸렸고 이 아이디어를 활용하여 코드로 풀어나가는 데에도 시간이 많이걸렸다.
+풀면서 머리가 조금 아팠지만 푼 후에는 꽤나 별거 아닌문제였다.
+
+This problem took me quite some time.
+It took a while to come up with a workable idea, and it also took a lot of time to implement that idea in code.
+It gave me a bit of a headache while solving it, but in hindsight, it wasn’t such a difficult problem after all.

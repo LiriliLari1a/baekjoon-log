@@ -1,0 +1,136 @@
+# Baekjoon No.2042 - 구간 합 구하기
+
+- [문제 링크](https://www.acmicpc.net/problem/2042)
+
+
+## 문제 설명 Problem Description
+어떤 N개의 수가 주어져 있다. 그런데 중간에 수의 변경이 빈번히 일어나고 그 중간에 어떤 부분의 합을 구하려 한다.
+첫째 줄에 수의 개수 N(1 ≤ N ≤ 1,000,000)과 M(1 ≤ M ≤ 10,000), K(1 ≤ K ≤ 10,000) 가 주어진다. 
+M은 수의 변경이 일어나는 횟수이고, K는 구간의 합을 구하는 횟수이다. 그리고 둘째 줄부터 N+1번째 줄까지 N개의 수가 주어진다. 
+그리고 N+2번째 줄부터 N+M+K+1번째 줄까지 세 개의 정수 a, b, c가 주어지는데, a가 1인 경우 b(1 ≤ b ≤ N)번째 수를 c로 바꾸고 a가 2인 경우에는 b(1 ≤ b ≤ N)번째 수부터 c(b ≤ c ≤ N)번째 수까지의 합을 구하여 출력하면 된다.
+입력으로 주어지는 모든 수는 -2^63보다 크거나 같고, 2^63-1보다 작거나 같은 정수이다.
+첫째 줄부터 K줄에 걸쳐 구한 구간의 합을 출력한다. 단, 정답은 -2^63보다 크거나 같고, 26^3-1보다 작거나 같은 정수이다.
+
+You are given N numbers. During the process, numbers are frequently updated, and in between, you are asked to find the sum of a certain range.
+On the first line, you are given the number of elements N (1 ≤ N ≤ 1,000,000), the number of update operations M (1 ≤ M ≤ 10,000), and the number of range sum queries K (1 ≤ K ≤ 10,000).
+The next N lines (from the 2nd to the N+1-th line) each contain one of the initial numbers.
+From line N+2 to line N+M+K+1, each line contains three integers a, b, c:
+If a = 1, update the value of the b-th number (1 ≤ b ≤ N) to c.
+If a = 2, output the sum of the numbers from index b (1 ≤ b ≤ N) to index c (b ≤ c ≤ N).
+All numbers given in the input are integers greater than or equal to −2^63 and less than 2^63.
+The output should consist of K lines, each containing the sum for one of the range queries. The answer for each query will be an integer greater than or equal to −2^63 and less than 2^63.
+
+
+## 생각 과정 Thought Process
+1. ** 합 리스트 **
+처음에는 합 리스트와 변동된 값 리스트를 만들어 한번에 계산으로 관리하려 했으나 O(N^2) 으로 실패했다.
+
+2. ** 세그먼트 트리 **
+부분합에 있어서는 세그먼티를 사용하면된다. 세그먼트 트리를 사용해본지 너무 오래돼서 남아있는게 거의 없기 때문에 정석풀이를 두고 풀었다.
+
+3. ** 수열 수정 **
+기본적인 세그먼트 트리의 구조를 만든 후 이문제의 핵심인 빈번한 수의 변경을 구현할 차례이다.
+필요한 노드만 꺼내서 수정한다는 것은 생각보다 어려웠다.
+트리가 오직 하나의 부분합, 그리고 바꾸려는 그 위치의 값만 가지고 있는 위치를 찾아야한다.
+그래서 찾고 있는 인덱스의 위치와 트리가 내포하고 있는 범위의 중간(int)을 계산해서 범위를 찾아나갔다.
+만약 그 인덱스를 찾으면 값을 변환하고 나머지 호출됐던 함수들을 통해 부모를 타고 올라가며 값을 수정했다.
+
+1. ** Prefix Sum List **
+At first, I tried to create a prefix sum list along with a list of updated values, managing everything through direct calculations.
+However, this approach failed due to an O(N²) time complexity.
+
+2. ** Segment Tree **
+For range sum queries, a segment tree is the way to go. 
+It had been such a long time since I last used one that I barely remembered how it worked, so I solved it following the standard approach.
+
+3. ** Sequence Updates **
+After constructing the basic structure of the segment tree, it was time to implement the core of this problem — frequent number updates.
+Finding and updating only the necessary nodes was trickier than I expected. 
+I had to locate the position in the tree that contained only one range sum — specifically, the position representing the value I wanted to change.
+To do this, I calculated the midpoint (int) of the current range covered by the node and recursively narrowed the range until I found the target index.
+Once the index was found, I replaced the value and then updated the values of the parent nodes while unwinding the recursive calls.
+
+
+##코드 설명 Code
+
+```python
+N, M, K = map(int, input().split())
+numbers = [0] * N   # 수열
+tree = [0] * (4 * N)    # 세그먼트 트리
+
+# 세그먼트 트리 작성
+def build(node, start, end):
+  # 하나의 값만을 포함
+  if start == end:
+    tree[node] = numbers[start]
+  # 두개 이상의 값을 포함
+  else:
+    mid = (start + end) // 2
+    build(node * 2, start, mid)
+    build(node * 2 + 1, mid + 1, end)
+    tree[node] = tree[node * 2] + tree[node * 2 + 1]
+
+# 쿼리의 값을 구함
+def query(node, start, end, left, right):
+  # 구하려는 범위 내에 들어오지 않음
+  if right < start or end < left:
+    return 0
+  # 구하려는 범위 내에 들어옴
+  if left <= start and end <= right:
+    return tree[node]
+  # 구하려는 범위와 아닌곳을 모두 포함
+  mid = (start + end) // 2
+  l_sum = query(node * 2, start, mid, left, right)
+  r_sum = query(node * 2 + 1, mid + 1, end, left, right)
+  return l_sum + r_sum
+
+# 트리의 값을 수정
+def update(node, start, end, idx, val):
+  # 바꾸려는 값의 위치를 찾음
+  if start == end:
+    numbers[idx] = val
+    tree[node] = val
+  else:
+    mid = (start + end) // 2
+    if idx <= mid:
+      update(node * 2, start, mid, idx, val)
+    else:
+      update(node * 2 + 1, mid + 1, end, idx, val)
+    # 바꾼 값의 모든 부모노드에 대해 업데이트
+    tree[node] = tree[node * 2] + tree[node * 2 + 1]
+
+for i in range(N):
+  numbers[i] = int(input())
+
+build(1, 0, N - 1)
+for _ in range(M + K):
+  a, b, c = map(int, input().split())
+  if a == 1:
+    update(1, 0, N - 1, b - 1, c)
+  else:
+    print(query(1, 0, N - 1, b - 1, c - 1))
+
+
+## 예시 입력 Sample Input
+5 2 2
+1
+2
+3
+4
+5
+1 3 6
+2 2 5
+1 5 2
+2 3 5
+
+## 예시 출력 Sample Output
+17
+12
+
+
+## 마무리 Conclusion or Reflection
+물론 답지를 보고 노트에 모든 원리를 적어나가며 공부했지만 세그먼트 트리에 대해 복기시켜주는 문제였다.
+또한 재귀에 약한 타입이라 조금 힘들었지만 부족한점을 깨닫고 조금 더 머리를 돌려서 생각의 한계를 조금더 열어준 문제였다.
+
+Although I did look at the editorial and wrote down all the principles in my notes while studying, this problem served as a good refresher on segment trees.
+As someone who struggles with recursion, it was a bit tough, but it helped me identify my weak points and pushed me to think a little further, expanding my problem-solving boundaries.

@@ -1,0 +1,123 @@
+# Baekjoon No.2357 - 최솟값과 최댓값
+
+- [문제 링크](https://www.acmicpc.net/problem/2357)
+
+## 문제 설명 Problem Description
+N(1 ≤ N ≤ 100,000)개의 정수들이 있을 때, a번째 정수부터 b번째 정수까지 중에서 제일 작은 정수, 또는 제일 큰 정수를 찾는 것은 어려운 일이 아니다.
+하지만 이와 같은 a, b의 쌍이 M(1 ≤ M ≤ 100,000)개 주어졌을 때는 어려운 문제가 된다.
+여기서 a번째라는 것은 입력되는 순서로 a번째라는 이야기이다. 예를 들어 a=1, b=3이라면 입력된 순서대로 1번, 2번, 3번 정수 중에서 최소, 최댓값을 찾아야 한다. 
+각각의 정수들은 1이상 1,000,000,000이하의 값을 갖는다.
+첫째 줄에 N, M이 주어진다. 다음 N개의 줄에는 N개의 정수가 주어진다. 다음 M개의 줄에는 a, b의 쌍이 주어진다.
+M개의 줄에 입력받은 순서대로 각 a, b에 대한 답을 최솟값, 최댓값 순서로 출력한다.
+
+Given N integers (1 ≤ N ≤ 100,000), finding the smallest or largest integer between the a-th and b-th integers is not difficult.
+However, when M (1 ≤ M ≤ 100,000) pairs of a and b are given, the problem becomes more challenging.
+Here, "the a-th" means the a-th integer in the order it was input. 
+For example, if a = 1 and b = 3, you must find the minimum and maximum values among the 1st, 2nd, and 3rd integers in input order.
+Each integer has a value between 1 and 1,000,000,000 (inclusive).
+The first line contains N and M.
+The next N lines each contain one integer (the list of N integers).
+The following M lines each contain two integers a and b, representing the query range.
+For each query, print the minimum value and maximum value in the given range, in that order, one query per line, in the same order as input.
+
+
+## 생각 과정 Thought Process
+1. ** 세그먼트 트리 **
+어제 공부한 세그먼트 트리를 이용해서 구현하면 되겠다고 생각했다.
+이번엔 답지를 보지 않고 직접 구현했다. 구간합과 비슷하게 그 구간에서 찾을 수 있는 최대/최소값을 저장했다.
+최대/최소값 함수를 따로 작성하기엔 낭비이므로 ismax bool을 추가하여 마지막 리턴에서만 min(), max() 함수를 분리하여 사용했다.
+
+2. ** 쿼리 **
+쿼리를 작성하는것은 어려운 작업은 아니지만 조금 헤멨다. 
+최대/최소값이든 구간합이든 저장하는 종류만 다르지 같은 기능으로 돌아가기 때문에 어렵게 생각할 필요 없었는데 어렵게 생각했다.
+다듬기 전에는 float("inf")가 덕지덕지 붙어있었는데 min값을 계산할때 혹시나 tree에 남아있는 0이 영향을 줄까 생각을 했었다.
+하지만 필요가 없고 0의 값을 가지는 tree에는 접근하지 않는다는 것을 깨닫고 작성중에 관련된 코드는 모두 뺐다.
+
+1. ** Segment Tree **
+I thought this could be solved using the segment tree I studied yesterday.
+This time, I implemented it without looking at any solutions.
+Similar to range sum queries, I stored the maximum and minimum values for each segment.
+Instead of writing separate functions for max and min, I added a ismax boolean flag so that only in the final return step would I decide whether to use min() or max().
+
+2. ** Query **
+Writing the query function wasn’t too difficult, but I still stumbled a bit.
+Whether you’re finding a max/min or a sum, the mechanism is the same—the only difference is the type of value you store—so there was no need to overcomplicate it, but I did at first.
+Before refining the code, I had float("inf") scattered everywhere, because when calculating the min value, I was worried that zeros left in the tree might affect the result.
+I later realized that was unnecessary, since we never access tree nodes that hold irrelevant zeros, so I removed all such code during cleanup.
+
+
+##코드 설명 Code
+
+```python
+N, M = map(int, input().split())
+max_tree = [0] * (N * 4)
+min_tree = [0] * (N * 4)
+
+# 수열 입력
+numbers = [0] * N
+for i in range(N):
+  numbers[i] = int(input())
+
+# 세그먼트 트리 작성 (min, max)
+def build(node, start, end, tree, ismax):
+  if start == end:
+    tree[node] = numbers[start]
+  else:
+    mid = (start + end) // 2 
+    build(node * 2, start, mid, tree, ismax)
+    build(node * 2 + 1, mid + 1, end, tree, ismax)
+    tree[node] = max(tree[node * 2], tree[node * 2 + 1]) if ismax else min(tree[node * 2], tree[node * 2 + 1])
+
+# 쿼리를 통한 계산 (min, max)
+def query(node, start, end, left, right, tree, ismax):
+  if start > right or end < left:
+    return 0 if ismax else float("inf")
+  if left <= start and right >= end:
+    return tree[node]
+  else:
+    mid = (start + end) // 2
+    left_value = query(node * 2, start, mid, left, right, tree, ismax)
+    right_value = query(node * 2 + 1, mid + 1, end, left, right, tree, ismax)
+    return max(left_value, right_value) if ismax else min(left_value, right_value)
+
+# 세그먼트 트리 작성
+build(1, 0, N - 1, max_tree, True)
+build(1, 0, N - 1, min_tree, False)
+
+# 입력처리
+for _ in range(M):
+  a, b = map(int, input().split())
+  print(query(1, 0, N - 1, a - 1, b - 1, min_tree, False), query(1, 0, N - 1, a - 1, b - 1, max_tree, True))
+
+
+## 예시 입력 Sample Input
+10 4
+75
+30
+100
+38
+50
+51
+52
+20
+81
+5
+1 10
+3 5
+6 9
+8 10
+
+## 예시 출력 Sample Output
+5 100
+38 100
+20 81
+5 81
+
+
+## 마무리 Conclusion or Reflection
+세그먼트 트리와 쿼리를 참고도 하지 않고 구현했다.
+조금 외워서 푼다는 느낌이 들어 공부를 더 해보아야겠지만 머릿속에서 세그먼트 트리와 쿼리를 꺼내서 썻다는 것에 의의가있다.
+
+I implemented both the segment tree and query function without referring to any resources.
+It still feels like I’m relying partly on memorization, so I plan to study more.
+Still, I take pride in having been able to pull the segment tree and query logic out of my own head and write it down.

@@ -4,8 +4,12 @@
 
 ## 문제 설명 Problem Description
 자연수 n이 주어졌을 때, GCD(n, k) = 1을 만족하는 자연수 1 ≤ k ≤ n 의 개수를 구하는 프로그램을 작성하시오.
-첫째 줄에 자연수 n (1 ≤ n ≤ 1012)이 주어진다.
+첫째 줄에 자연수 n (1 ≤ n ≤ 10^12)이 주어진다.
 GCD(n, k) = 1을 만족하는 자연수 1 ≤ k ≤ n 의 개수를 출력한다.
+
+Given a natural number n, write a program to count how many natural numbers k satisfy the condition GCD(n, k) = 1, where 1 ≤ k ≤ n
+The first line contains a natural number n (1 ≤ n ≤ 10^12)
+Print the number of integers k such that GCD(n, k) = 1 and  1 ≤ k ≤ n
 
 
 ## 생각 과정 Thought Process

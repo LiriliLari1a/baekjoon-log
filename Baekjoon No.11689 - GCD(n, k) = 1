@@ -1,0 +1,89 @@
+# Baekjoon No.11689 - GCD(n, k) = 1
+
+- [문제 링크](https://www.acmicpc.net/problem/11689)
+
+## 문제 설명 Problem Description
+자연수 n이 주어졌을 때, GCD(n, k) = 1을 만족하는 자연수 1 ≤ k ≤ n 의 개수를 구하는 프로그램을 작성하시오.
+첫째 줄에 자연수 n (1 ≤ n ≤ 1012)이 주어진다.
+GCD(n, k) = 1을 만족하는 자연수 1 ≤ k ≤ n 의 개수를 출력한다.
+
+
+## 생각 과정 Thought Process
+1. ** 오일러 피함수 **
+일단 이 문제를 해결하기 위해서는 서로소인 집합의 개수를 구해야 한다. 서로소의 개수를 구할수 있는 공식인 오일러 피함수를 찾아냈다.
+
+2. ** 에라토스테네스의 체 **
+오일러 피함수를 적용시키기 위해서는 소수로 해당 수를 소인수 분해 해야하는데 그러기 위해서는 소수를 찾고 브루트포스로 나누어지는 소수의 종류를 찾아야했다.
+에라토스테네스의 체를 이용하여 소수를 걸러냈다. 걸러낸후 다시 루프를 도는것은 비효율적이므로 에라토스테네스의 체로 더이상 걸러지지 않을 때 소수리스트에 추가했다.
+
+3. ** 소인수 분해 **
+소인수 분해를 시도했는데 root(n) 이하의 수는 모두 나누어 버린후 root(n) 보다 큰수 를 소인수로 갖고있을 때 그 수가 포함되지 않는 것을 확인했다.
+그래서 마지막에 남은 소인수는 소수일것이므로 결과값에 반영했다.
+
+1. ** Euler’s Totient Function **
+To solve this problem, we need to count the number of integers that are coprime with n. The formula that allows us to count such numbers is Euler’s Totient Function.
+
+2. ** Sieve of Eratosthenes **
+To apply Euler’s Totient Function, we need to factorize n into its prime factors. For that, we first need a list of prime numbers, so I used the Sieve of Eratosthenes. 
+Instead of filtering all the way and then looping again, I added primes directly to the prime list during the sieve process when they were first confirmed as primes.
+
+3. ** Prime Factorization **
+When attempting prime factorization, I divided by all numbers up to root(n). 
+However, I noticed that if n still remained greater than 1 afterward, the leftover number was itself a prime factor. 
+Therefore, I included that final prime factor in the result.
+
+
+##코드 설명 Code
+
+```python
+n = int(input())
+
+l = int(n ** 0.5) + 1
+# 에라토스테네스의 체를 이용하여 소수를 판별
+prime = [True] * (l + 1)
+
+# 0과 1은 소수가 아님
+prime[0] = prime[1] = False
+
+pnum = []   # 소수 저장 리스트(시간 효율성 개선)
+for i in range(2, l + 1):
+  if not prime[i]:
+    continue
+  # 에라토스테네스의 체로 더이상 걸러지지 않는 수 i
+  pnum.append(i)
+  for j in range(i * i, l + 1, i):
+    prime[j] = False
+
+result = n
+temp = n
+
+# 찾아놓은 소수중 소인수분해의 요소가 될수있는 것들을 찾음
+for num in pnum:
+  if num * num > temp:
+    break
+  if temp % num == 0:
+    while temp % num == 0:
+      temp //= num
+    result -= result // num
+  
+# 나머지 계산
+if temp > 1:
+  result -= result // temp
+
+print(result)
+
+
+## 예시 입력 Sample Input
+999999999989
+
+
+## 예시 출력 Sample Output
+999999999988
+
+
+## 마무리 Conclusion or Reflection
+오일러 피함수라는 새로운 개념을 배운 문제였다. 
+에라토스테네스의 체도 복습하는 시간이 되었으며 주어진 수 n에서 root(n) 이하의 모든 소인수를 찾고 나누었을때 1보다 크게 남았을 경우 남는 수는 소수인것도 찾아내었다.
+
+This problem taught me the new concept of Euler’s Totient Function.
+It was also a good review of the Sieve of Eratosthenes, and I learned that after removing all prime factors up to root(n), any number greater than 1 that remains must be prime and should also be included.

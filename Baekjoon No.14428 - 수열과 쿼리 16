@@ -1,0 +1,143 @@
+# Baekjoon No.14428 - 수열과 쿼리 16
+
+- [문제 링크](https://www.acmicpc.net/problem/14428)
+
+## 문제 설명 Problem Description
+길이가 N인 수열 A1, A2, ..., AN이 주어진다. 이때, 다음 쿼리를 수행하는 프로그램을 작성하시오.
+1 i v : Ai를 v로 바꾼다. (1 ≤ i ≤ N, 1 ≤ v ≤ 109)
+2 i j : Ai, Ai+1, ..., Aj에서 크기가 가장 작은 값의 인덱스를 출력한다. 그러한 값이 여러개인 경우에는 인덱스가 작은 것을 출력한다. (1 ≤ i ≤ j ≤ N, 1 ≤ v ≤ 109)
+수열의 인덱스는 1부터 시작한다.
+첫째 줄에 수열의 크기 N이 주어진다. (1 ≤ N ≤ 100,000)
+둘째 줄에는 A1, A2, ..., AN이 주어진다. (1 ≤ Ai ≤ 109)
+셋째 줄에는 쿼리의 개수 M이 주어진다. (1 ≤ M ≤ 100,000)
+넷째 줄부터 M개의 줄에는 쿼리가 주어진다.
+2번 쿼리에 대해서 정답을 한 줄에 하나씩 순서대로 출력한다.
+
+You are given a sequence of length N, A1, A2, ..., AN.
+You need to process the following queries:
+1 i v : Replace Ai with v.
+(1 ≤ i ≤ N, 1 ≤ v ≤ 10^9)
+2 i j : Print the index of the smallest value among Ai, Ai+1, ..., Aj.
+If there are multiple such indices, print the smallest index.
+(1 ≤ i ≤ j ≤ N)
+The sequence is 1-indexed.
+The first line contains an integer N (1 ≤ N ≤ 100,000).
+The second line contains N integers: A1, A2, ..., AN (1 ≤ Ai ≤ 10^9).
+The third line contains an integer M, the number of queries (1 ≤ M ≤ 100,000).
+Each of the next M lines contains a query as described above.
+For each query of type 2, print the answer (the index) on a new line.
+
+
+## 생각 과정 Thought Process
+1. ** 세그먼트 트리 **
+이제 무언가 수열이 있고 그 수열에서 정해진 규칙에 따라 어떤 구간에서 값을 구해야 할때 세그먼트 트리를 사용해야 된다고 생각이 연결된다.
+따라서 세그먼트 트리를 사용하기 위한 기본적인 작성함수와 쿼리를 구하는 함수를 만들었다.
+
+2. ** 2번 쿼리 **
+이 문제는 특이하게 해당 수열의 값이 아닌 인덱스를 반환해야 한다. 
+세그먼트 트리를 작성할때는 문제가 없었지만 2번 쿼리를 수행하는데에 조금 어려움이있었다.
+그 이유는 함수 내에서 필요없는 범위를 처리시에 반환하는 값의 문제였다.
+반환하는 값이 해당 수열의 인덱스를 참조하므로 0이나 INF 같은 값을 쓸 수 없다.
+여러 고민 끝에 구해야 하는 범위가 주어졌으므로 그중 아무 값이나 참조하도록 했다(코드내에서는 좌측 값 참조).
+예외 처리로 해결하는 방안도 있지만 트릭을 써보고 싶어서 사용 해 보았다.
+
+1. ** Segment Tree **
+When there is a sequence and we need to compute values from certain ranges based on given rules, it naturally connects to the idea of using a segment tree.
+Therefore, I implemented the basic build function for the segment tree as well as the query function.
+
+2. ** Query Type 2 **
+This problem is unique in that it requires returning the index of the smallest value rather than the value itself.
+Building the segment tree was straightforward, but handling query type 2 was a bit tricky.
+The main difficulty came from deciding what value to return when the function encounters a range that does not overlap with the query range.
+Since the query result must reference an index of the sequence, I could not simply return 0 or INF.
+After much thought, I decided to reference any valid index within the query range (in my code, I chose the left index).
+While exception handling could also solve the problem, I wanted to try using this trick instead.
+
+
+##코드 설명 Code
+
+```python
+# 세그먼트 트리 작성
+def build(node, start, end):
+  if start == end:
+    tree[node] = start
+  else:
+    mid = (start + end) // 2
+    build(node * 2, start, mid)
+    build(node * 2 + 1, mid + 1, end)
+    if A[tree[node * 2]] > A[tree[node * 2 + 1]]:
+      tree[node] = tree[node * 2 + 1]
+    else:
+      tree[node] = tree[node * 2]
+
+# 쿼리를 구함
+def quary(node, start, end, left, right):
+  # 필요없는 구간일 때 구해야 하는 범위 내의 값중 하나를 반환
+  if start > right or end < left:
+    return left
+  if left <= start and end <= right:
+    return tree[node]
+  mid = (start + end) // 2
+  Lmin = quary(node * 2, start, mid, left, right)
+  Rmin = quary(node * 2 + 1, mid + 1, end, left, right)
+  # 정해진 규칙에 따라 처리
+  if A[Lmin] == A[Rmin]:
+    return min(Rmin, Lmin)
+  elif A[Lmin] > A[Rmin]:
+    return Rmin
+  else:
+    return Lmin
+
+# 트리, 수열의 값을 갱신
+def update(node, start, end, target, value):
+  if start == end:
+    tree[node] = target
+    A[start] = value
+  else:
+    mid = (start + end) // 2
+    if target <= mid:
+      update(node * 2, start, mid, target, value)
+    else:
+      update(node * 2 + 1, mid + 1, end, target, value)
+    if A[tree[node * 2]] > A[tree[node * 2 + 1]]:
+      tree[node] = tree[node * 2 + 1]
+    else:
+      tree[node] = tree[node * 2]
+
+N = int(input())
+tree = [-1] * (4 * N)
+
+A = list(map(int, input().split()))
+
+build(1, 0, N - 1)
+M = int(input())
+
+for _ in range(M):
+  a, b, c = map(int, input().split())
+  if a == 1:
+    update(1, 0, N - 1, b - 1, c)
+  else:
+    print(quary(1, 0, N - 1, b - 1, c - 1) + 1)
+
+
+## 예시 입력 Sample Input
+10
+1 3 2 1 4 2 5 3 1 4 
+5
+2 1 10
+1 8 1
+2 8 10
+1 1 4
+2 1 10
+
+## 예시 출력 Sample Output
+1
+8
+4
+
+## 마무리 Conclusion or Reflection
+솔직히 이 문제를 해결하는 방법엔 딕셔너리를 사용하던지 아니면 여러가지가 있었다. 
+하지만 메모리 사용 최적화를 해보고 싶어서 최대한 수열과 세그먼트 트리만 사용하도록 해 보았다.
+
+To be honest, there were several possible ways to solve this problem, such as using a dictionary or other approaches.
+However, I wanted to try optimizing memory usage, so I implemented it using only the sequence and the segment tree as much as possible.

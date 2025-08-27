@@ -15,11 +15,9 @@
 
 You are given a sequence of length N, A1, A2, ..., AN.
 You need to process the following queries:
-1 i v : Replace Ai with v.
-(1 ≤ i ≤ N, 1 ≤ v ≤ 10^9)
+1 i v : Replace Ai with v. (1 ≤ i ≤ N, 1 ≤ v ≤ 10^9)
 2 i j : Print the index of the smallest value among Ai, Ai+1, ..., Aj.
-If there are multiple such indices, print the smallest index.
-(1 ≤ i ≤ j ≤ N)
+If there are multiple such indices, print the smallest index. (1 ≤ i ≤ j ≤ N)
 The sequence is 1-indexed.
 The first line contains an integer N (1 ≤ N ≤ 100,000).
 The second line contains N integers: A1, A2, ..., AN (1 ≤ Ai ≤ 10^9).

@@ -1,0 +1,127 @@
+# Baekjoon No.1086 - 박성원
+
+- [문제 링크](https://www.acmicpc.net/problem/1086)
+
+
+## 문제 설명 Problem Description
+서로 다른 정수로 이루어진 집합이 있다. 이 집합의 순열을 합치면 큰 정수 하나를 만들 수 있다. 예를 들어, {5221,40,1,58,9}로 5221401589를 만들 수 있다. 
+합친수가 정수 K로 나누어 떨어지는 순열을 구하는 프로그램을 작성하시오.
+첫째 줄에 집합의 수의 개수 N이 주어진다. N은 15보다 작거나 같은 자연수이다. 둘째 줄부터 N개의 줄에는 집합에 포함된 수가 주어진다. 
+각 수의 길이는 길어야 50인 자연수이다. 마지막 줄에는 K가 주어진다. K는 100보다 작거나 같은 자연수이다.
+첫째 줄에 정답을 기약분수 형태로 출력한다. p/q꼴로 출력하며, p는 분자, q는 분모이다. 정답이 0인 경우는 0/1로, 1인 경우는 1/1로 출력한다.
+
+You are given a set of distinct integers. By concatenating the integers in some order, you can form a single large integer.
+For example, from the set {5221, 40, 1, 58, 9}, you can create 5221401589.
+Your task is to count how many permutations of this set produce a number divisible by an integer K.
+The first line contains an integer N — the size of the set. (1 ≤ N ≤ 15)
+The next N lines each contain one integer from the set.
+Each integer has at most 50 digits and is a natural number.
+The last line contains an integer K. (1 ≤ K ≤ 100)
+Print the result as a reduced fraction p/q, where
+p = number of permutations divisible by K
+q = total number of permutations (N!)
+If the result is exactly 0, print 0/1.
+If the result is exactly 1, print 1/1.
+
+
+## 생각 과정 Thought Process
+1. ** mod 연산 곱분배 **
+이 문제를 보고 순열을 만들면 수가 매우 커지므로 그냥 그 큰 수 자체를 mod 연산 하기에는 무리가 있다고 판단했다.
+따라서 mod 연산의 곱분배가 될 수 있는 방법을 찾아 보기로 했다.
+처음에는 이 곱분배 법칙을 모든 케이스에 대해 A * B 형태로 만든후 분배 하려 했으나 모든 케이스를 구하는 것 자체가 무리가 있다고 생각했다.
+
+2. ** 비트마스킹 동적계획법 **
+비트마스킹과 동적계획법을 이용하면 풀수 있다고 하여 알아보았다.
+이 방법을 mod 연산의 곱분배와 함께 사용하면 풀수 있었다.
+비트마스킹은 주어진 수의 집합의 포함여부를 관리하고 동적계획법 테이블 자체가 미리 곱분배를 내포하도록 했다.
+수가 0일때의 나머지 연산값은 1임을 이용해 dp[0][0] = 1 부터 시작하여 하나씩 수를 붙이는 식으로 점화식을 세웠다.
+
+3. ** 약분 **
+약분은 파이썬 math.gcd() 함수로 구현하였다.
+
+1. ** Modular Multiplication Property **
+When I first looked at this problem, I realized that the concatenated number could become extremely large, so directly applying the modulo operation to the whole number would be impractical.
+Instead, I thought about using the distributive property of modular arithmetic. 
+Initially, I considered forming every possible case in the form of A * B and then applying the property, but I quickly realized that generating all such cases itself was infeasible.
+
+2. ** Bitmask Dynamic Programming **
+I learned that the problem can be solved using bitmasking together with dynamic programming.
+By combining this method with modular arithmetic, the solution becomes manageable.
+The bitmask keeps track of which numbers in the set have already been used, and the DP table is designed to implicitly handle the modular multiplications.
+Since the remainder count for “zero numbers used” is 1, I initialized with dp[0][0] = 1, and then built the recurrence by attaching numbers one by one.
+
+3. ** Fraction Reduction **
+For reducing the final fraction, I used Python’s math.gcd() function
+
+
+##코드 설명 Code
+
+```python
+import math
+
+N = int(input())
+# 정수 집합 저장
+numbers = []
+for _ in range(N):
+  numbers.append(int(input()))
+
+K = int(input())
+
+mods = [0] * N      # 정수 집합의 mod K
+length = [0] * N    # 정수 집합의 자릿수
+for i in range(N):
+  mods[i] = numbers[i] % K
+  length[i] = len(str(numbers[i]))
+
+# 비트마스킹 기반 mod 결과값 동적계획법 테이블
+dp = [[0] * K for _ in range(1 << N)]
+dp[0][0] = 1    # dp[0개 선택][0 mod K] = 1
+
+for mask in range(1 << N):
+  for r in range(K):    # 비트마스킹된 수들로 조합된 나머지
+    if dp[mask][r] == 0:    # 숫자 존재하지 않음
+      continue
+    for j in range(N):    # 추가할 수
+      if mask & (1 << j):   # 이미 선택된 수
+        continue
+      new_mask = mask | (1 << j)    # 해당 수를 선택 => 비트마스킹
+      new_r = ((r * pow(10, length[j], K)) + mods[j]) % K   # mod의 분배법칙으로 큰수를 만들지 않고 계산
+      dp[new_mask][new_r] += dp[mask][r]    # 이전 레벨에서 구했던 수를 추가
+
+numerator = dp[(1 << N) - 1][0]   # 분자 (구한 경우의 수)
+denomiator = math.factorial(N)    # 분모 (전체 경우의 수)
+
+g = math.gcd(numerator, denomiator)   # 최대 공약수
+# 약분
+numerator //= g
+denomiator //= g
+
+# 분수 형태 출력
+print(numerator, end = "")
+print("/", end = "")
+print(denomiator)
+
+
+## 예시 입력 Sample Input
+9
+13
+10129414190271203
+102
+102666818896
+1216
+1217
+1218
+101278001
+1000021412678412681
+21
+
+## 예시 출력 Sample Output
+5183/36288
+
+
+## 마무리 Conclusion or Reflection
+이해하면 쉬운 코드지만 처음보면 복잡하고 어렵다. 
+최대한 힌트를 덜 보면서 혼자 구현하고 노력했으나 내가 생각하고 구현한 점수는 50점 정도 밖에 못줄 것 같다.
+
+Although the code is actually straightforward once you understand the logic, it looks complicated and difficult at first glance.
+I tried to implement it with as little reliance on hints as possible, but honestly, I would only give myself about 50 out of 100 points for my attempt.

@@ -1,0 +1,107 @@
+# Baekjoon No.1708 - 볼록 껍질
+
+- [문제 링크](https://www.acmicpc.net/problem/1708)
+
+## 문제 설명 Problem Description
+점의 집합이 주어졌을 때, 볼록 껍질을 이루는 점의 개수를 구하는 프로그램을 작성하시오.
+첫째 줄에 점의 개수 N(3 ≤ N ≤ 100,000)이 주어진다. 둘째 줄부터 N개의 줄에 걸쳐 각 점의 x좌표와 y좌표가 빈 칸을 사이에 두고 주어진다. 
+주어지는 모든 점의 좌표는 다르다. x좌표와 y좌표의 범위는 절댓값 40,000을 넘지 않는다. 입력으로 주어지는 다각형의 모든 점이 일직선을 이루는 경우는 없다.
+첫째 줄에 볼록 껍질을 이루는 점의 개수를 출력한다.
+볼록 껍질의 변에 점이 여러 개 있는 경우에는 가장 양 끝 점만 개수에 포함한다.
+
+Given a set of points, write a program that calculates the number of points that form the convex hull.
+The first line contains the number of points N (3 ≤ N ≤ 100,000).
+Each of the next N lines contains two integers, the x and y coordinates of a point, separated by a space.
+All points have distinct coordinates. The absolute values of the coordinates do not exceed 40,000. It is guaranteed that the given points do not all lie on a single straight line.
+If multiple points lie on the same edge of the convex hull, only the two endpoints are counted.
+Output the number of points that form the convex hull on the first line.
+
+
+## 생각 과정 Thought Process
+1. ** 구현 **
+머릿속으로 이 문제를 어떻게 접근해야 할지 생각을 해 보다가 작동할 것 같은 방법을 떠올렸다.
+볼록껍질의 일부 점 하나를 구하고 그 점을 (0, 0)으로 잡은 후 math.atan2()로 각도를 모두 구한 후 정렬한다.
+오름차순으로 정렬된 각도에 해당하는 점을 순서대로 꺼내어 과연 볼록껍질을 구성하는 점인지 확인해보는 것이다.
+
+2. ** Graham Scan **
+생각보다 뜻대로 구현이 잘 되지않아 생성형 Ai 모델에 코드에 대한 조언을 구했다.
+만들었던 코드가 "Graham Scan"과 매우 흡사하다는 것을 깨달았다.
+외적과 while 문을 쓴다는 것 외에는 거의 다른점이 없어 쉽게 배웠다.
+처음에는 외적을 사용하지 않고 직접 각도를 구하는 함수를 만들어 각도의 변화를 감지해서 push-pop 했지만 벡터 외적만으로도 쉽게 구해진다는 것을 깨달았다.
+while 문도 정말 깔끔하게 정리되었는데 처음에는 한두줄로 끝날 것을 조금 복잡하게 구현해 놓아서 정상작동 하지 않았었다.
+
+3. ** 같은 각도에 위치한 점 처리 **
+"Graham Scan" 알고리즘을 빌려 작성해 보았지만 뭔가 부족했다. 처음에도 고민했던 같은 각도 값에 놓인 점이 두개 이상일 때 처리해야 하는 방법에 대해서 고민했다.
+어짜피 같은 각도 내 점이 두개 이상이면 최소 일직선에 놓인 세개의 점 이상이 될것이므로 삭제하는 방안을 생각해봤지만 조금 복잡해져서
+머릿속으로 상상하며 같은 각도 값에놓인 점이 세개 정도 될때 가장 가까운것 부터 or 먼것 부터 시뮬레이션을 돌려보았는데 무조건 가까운것부터 시도 해보는 것이 문제 없이 작동 할 것이라고 생각하여 그렇게 했다.
+
+1. ** Implementation **
+I tried to think about how to approach this problem in my head and came up with a method that seemed likely to work.
+I would find one point on the convex hull, treat it as (0, 0), then calculate the angles of all other points using math.atan2() and sort them.
+Then, I would take the points in order of ascending angle and check whether each point is part of the convex hull.
+
+2. ** Graham Scan **
+The implementation didn’t go as smoothly as I expected, so I asked a generative AI model for advice on the code.
+I realized that the code I had written was very similar to the "Graham Scan" algorithm.
+Other than using the cross product and a while loop, there wasn’t much difference, so it was easy to understand.
+At first, I didn’t use the cross product and tried to detect changes in angles with a custom function to decide when to push and pop points, but I realized that the convex hull can be computed much more easily with just the vector cross product.
+The while loop also organizes the logic very cleanly; initially, I overcomplicated it with extra lines, so it didn’t work correctly.
+
+3. ** Handling points with the same angle **
+Even after borrowing the "Graham Scan" algorithm, something felt missing. I had initially wondered how to handle cases where multiple points share the same angle.
+Since having multiple points at the same angle implies at least three points on a line, I considered removing them, but this made things a bit complicated.
+I mentally simulated cases where there were two or three points with the same angle, trying either the closest or the farthest first. 
+I concluded that trying the closest point first would always work reliably, so I implemented it that way.
+
+
+##코드 설명 Code
+
+```python
+import math
+
+# 외적
+def cross(o, a, b):
+  return (a[0]-o[0])*(b[1]-o[1]) - (a[1]-o[1])*(b[0]-o[0])
+
+# 점 a, b 사이의 거리
+def distance(a, b):
+  return (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2
+
+N = int(input())
+spots = [tuple(map(int, input().split())) for _ in range(N)]
+# 가장 작은 y 값의 점 -> 여러개면 그중 x값이 가장 작은 점
+start = min(spots, key=lambda p: (p[1], p[0]))
+
+# 각도 순으로 먼저 정렬 -> 같은 각도이면 거리가 짧은 순
+spots.sort(key=lambda p: (math.atan2(p[1] - start[1], p[0] - start[0]), distance(start, p)))
+
+# Graham Scan
+stack = []
+for current in spots:
+  # 현재 점이 바깥쪽으로 향해 꺾일 때 이전 점을 제거
+  while len(stack) >= 2 and cross(stack[-2], stack[-1], current) <= 0:
+    stack.pop()
+  stack.append(current)
+
+# 스택에 남아있는 점들 : 볼록껍질을 구성하는 점들
+print(len(stack))
+
+
+## 예시 입력 Sample Input
+3
+0 0
+0 1
+9 9
+
+## 예시 출력 Sample Output
+3
+
+
+## 마무리 Conclusion or Reflection
+내 생각과 일치한 방향을 가진 알고리즘이 존재해서 막힌 곳 부터 다시 배우는데에 어렵지 않게 습득했다.
+요즘 머릿속으로 그림은 구현이 되는데 이게 분명히 될텐데 하면서 뭘 구해야 하는지도 알지만 코딩을 시도 해 보지만 빈번하게 실패하는 것 같다.
+특히 디버깅 부분에서 잘못된 실수를 바로잡는데에 오래걸려서 피로도가 쌓이는 것 같다. 조금더 다양한 솔루션과 학습 방법이 필요함을 느꼈다.
+
+I was able to learn efficiently by starting from the points where I was stuck and comparing them to an existing algorithm that matched my thinking.
+Lately, I can visualize the process in my head, knowing that it should work and what I need to compute, but I often fail when I try to code it.
+In particular, debugging and fixing mistakes takes a long time and is tiring, so I feel I need a wider range of solutions and learning methods.

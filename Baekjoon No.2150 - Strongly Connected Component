@@ -1,0 +1,116 @@
+# Baekjoon No.2150 - Strongly Connected Component
+
+- [문제 링크](https://www.acmicpc.net/problem/2150)
+
+## 문제 설명 Problem Description
+첫째 줄에 두 정수 V(1 ≤ V ≤ 10,000), E(1 ≤ E ≤ 100,000)가 주어진다. 
+이는 그래프가 V개의 정점과 E개의 간선으로 이루어져 있다는 의미이다. 
+다음 E개의 줄에는 간선에 대한 정보를 나타내는 두 정수 A, B가 주어진다. 이는 A번 정점과 B번 정점이 연결되어 있다는 의미이다. 이때 방향은 A → B가 된다.
+정점은 1부터 V까지 번호가 매겨져 있다.
+첫째 줄에 SCC의 개수 K를 출력한다. 다음 K개의 줄에는 각 줄에 하나의 SCC에 속한 정점의 번호를 출력한다. 
+각 줄의 끝에는 -1을 출력하여 그 줄의 끝을 나타낸다. 각각의 SCC를 출력할 때 그 안에 속한 정점들은 오름차순으로 출력한다. 
+또한 여러 개의 SCC에 대해서는 그 안에 속해있는 가장 작은 정점의 정점 번호 순으로 출력한다.
+
+You are given two integers V (1 ≤ V ≤ 10,000) and E (1 ≤ E ≤ 100,000).
+This means the graph consists of V vertices and E directed edges.
+The next E lines each contain two integers A and B, which indicate that there is a directed edge from vertex A to vertex B.
+Vertices are numbered from 1 to V.
+Your task is to find all the Strongly Connected Components (SCCs) of this graph.
+On the first line, print the number K, the total number of SCCs.
+On the next K lines, print the vertices that belong to each SCC.
+Within each line, print the vertices of the SCC in ascending order, followed by -1 at the end of the line.
+When printing multiple SCCs, order them according to the smallest vertex number within each SCC (ascending).
+
+
+## 생각 과정 Thought Process
+1. ** 교집합 **
+처음에 이문제를 접근할때 노드와 간선 정보를 정방향과 역방향으로 저장한 그래프를 만들어 임의의 노드에 대해 각 그래프로 bfs를 이용하여 방문한 두 집합에 대해 교집합을 출력하도록 했다.
+너무 정직한 방법으로 접근 한 탓에 O(V(V + E))의 시간복잡도가 나와 시간초과 결과가 나왔다.
+
+2. ** Kosaraju 알고리즘 **
+어떻게 간소화를 할까 메모를 해 보다가 사이클이 생기는 구간 자체를 하나의 점으로 보면 그 점으로 이루어진 트리는 사이클이 없어진 트리라는 것을 알았다.
+그래서 재귀로 DFS를 이용하여 그 점을 가는 순서를 역방향으로 저장하고 역방향의 순서대로 다시 DFS를 실행하면 SCC를 구할 수 있을 것이라고 생각했다.
+
+1. ** Intersection **
+At first, when approaching this problem, I built two graphs storing the edges in both forward and reverse directions.
+For an arbitrary node, I ran BFS on both graphs and then took the intersection of the visited sets to output the SCC.
+Because this approach was too straightforward, it ended up with a time complexity of O(V(V + E)), which resulted in a time limit exceeded (TLE).
+
+2. ** Kosaraju’s Algorithm **
+While thinking about how to simplify the solution, I realized that if we treat each cycle as a single point, the resulting graph of these points becomes a tree without cycles.
+So, by performing a recursive DFS to record the finishing order of nodes, and then running DFS again in reverse graph order, I could compute the SCCs.
+
+
+##코드 설명 Code
+
+```python
+# dfs를 이용하여 해당 노드의 종료 시점을 기준으로 정렬
+def dfs(start, graph, visited, stack = None, group = None):
+  visited[start] = True
+  for nxt in graph[start]:
+    if not visited[nxt]:
+      dfs(nxt, graph, visited, stack, group)
+  if stack is not None:
+    stack.append(start)
+  if group is not None:
+    group.append(start)
+
+V, E = map(int, input().split())
+
+# 정방향 그래프, 역방향 그래프 모두 저장
+graph = { i : [] for i in range(1, V + 1) }
+reversed_graph = { i : [] for i in range(1, V + 1) }
+for _ in range(E):
+  A, B = map(int, input().split())
+  graph[A].append(B)
+  reversed_graph[B].append(A)
+
+# 정방향 그래프를 이용하여 해당 노드의 모든 자식 노드의 종료 시점을 기준으로 stack에 정렬
+visited = [False] * (V + 1)
+stack = []
+for i in range(1, V + 1):
+  if not visited[i]:
+    dfs(i, graph, visited, stack)
+
+# 역방향 그래프를 이용하여 SSC를 구함
+visited = [False] * (V + 1)
+result = []
+while stack:
+  node = stack.pop()
+  if not visited[node]:
+    group = []
+    dfs(node, reversed_graph, visited, group = group)
+    result.append(sorted(group))
+
+# 출력
+print(len(result))
+for compnent in sorted(result):
+  print(*sorted(compnent), -1)
+
+
+## 예시 입력 Sample Input
+7 9
+1 4
+4 5
+5 1
+1 6
+6 7
+2 7
+7 3
+3 7
+7 2
+
+## 예시 출력 Sample Output
+3
+1 4 5 -1
+2 3 7 -1
+6 -1
+
+
+## 마무리 Conclusion or Reflection
+코드를 작성하는데에 있어서 최적화를 위해 정형화된 코드를 조금 참고 했지만 기본적인 사고와 구현은 맞았다.
+너비우선탐색 또는 깊이우선탐색을 사용하는데에 있어서 보통 stack 이나 queue의 자료형을 이용하여 구현했지만 이러한 재귀로 함수의 종료시점을 파악한다라는 개념은 쉽게 잊히지 않을 것 같은 방법이었다.
+
+When writing the code, I referred to a standardized implementation for optimization, but the core idea and approach were my own.
+Although I usually implement BFS or DFS with stack or queue data structures, 
+this method of using recursion to capture the finishing time of nodes was a concept that left a strong impression on me and one I don’t think I’ll forget easily.

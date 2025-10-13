@@ -1,0 +1,178 @@
+# Baekjoon No.5719 - 거의 최단 경로
+- [문제 링크](https://www.acmicpc.net/problem/5719)
+
+
+## 문제 설명 Problem Description
+거의 최단 경로란 최단 경로에 포함되지 않는 도로로만 이루어진 경로 중 가장 짧은 것을 말한다.
+입력은 여러 개의 테스트 케이스로 이루어져 있다. 각 테스트 케이스의 첫째 줄에는 장소의 수 N (2 ≤ N ≤ 500)과 도로의 수 M (1 ≤ M ≤ 104)가 주어진다.
+ 장소는 0부터 N-1번까지 번호가 매겨져 있다. 둘째 줄에는 시작점 S와 도착점 D가 주어진다. (S ≠ D; 0 ≤ S, D < N) 다음 M개 줄에는 도로의 정보 U, V, P가 주어진다. (U ≠ V ; 0 ≤ U, V < N; 1 ≤ P ≤ 103)
+이 뜻은 U에서 V로 가는 도로의 길이가 P라는 뜻이다. U에서 V로 가는 도로는 최대 한 개이다. 또, U에서 V로 가는 도로와 V에서 U로 가는 도로는 다른 도로이다.
+입력의 마지막 줄에는 0이 두 개 주어진다.
+각 테스트 케이스에 대해서, 거의 최단 경로의 길이를 출력한다. 만약, 거의 최단 경로가 없는 경우에는 -1을 출력한다.
+
+A “almost shortest path” is defined as the shortest path that is composed only of roads not included in any shortest path between two points.
+The input consists of multiple test cases.
+For each test case:
+The first line contains two integers N and M — the number of places and the number of roads, respectively.
+(2 ≤ N ≤ 500, 1 ≤ M ≤ 10⁴)
+The places are numbered from 0 to N−1.
+The second line contains two integers S and D, representing the start and destination nodes.
+(S ≠ D, 0 ≤ S, D < N)
+The following M lines each contain three integers U, V, and P, meaning there is a directed road from U to V with a length of P.
+(U ≠ V, 1 ≤ P ≤ 10³)
+There can be at most one road from U to V.
+Note that a road from U to V and a road from V to U are considered different.
+The input ends with a line containing two zeros (0 0).
+For each test case, print the length of the almost shortest path.
+If there is no such path, print -1.
+
+
+
+## 생각 과정 Thought Process
+1. ** 최단 경로 **
+거의 최단 경로는 주어진 경로중에서 최단경로를 구한 후 모든 최단 경로를 제외하고 다시 최단 경로를 구해서 구하면 된다.
+가중치가 주어졌으므로 다익스트라로 최단경로를 구하는 함수를 사용했다.
+
+2. ** 경로 제외 **
+다익스트라를 이용하여 최단 경로의 가중치를 구했으면 이제 이것과 역추적 너비우선탐색을 이용하여 실제 최단 경로를 구할 수 있었다.
+역방향 그래프를 이용하여 다음 가중치로 가는 비용과 다음가중치의 합과 현재의 가중치가 같다면 이것을 실제 최단 경로로 저장했다.
+
+3. ** 거의 최단 경로 **
+역추적 너비우선탐색을 이용하여 한개 이상의 삭제해야 하는 경로를 구했다.
+직접 grpah에서 삭제할 수 있지만 연산비용 문제로 삭제되는 간선은 set()로 저장하고 다익스트라에서 (V1, V2) in set() 연산을 사용했다.
+
+
+1. ** Shortest Path **
+To find the almost shortest path, we first compute the shortest path among all given roads. Then, after removing all shortest paths, we compute the shortest path again.
+Since the graph has weighted edges, I used Dijkstra’s algorithm to find the shortest path.
+
+2. ** Removing Paths **
+Once the shortest path distances are obtained using Dijkstra, we can reconstruct the actual shortest paths by performing a reverse breadth-first search (BFS).
+By using the reversed graph, if the sum of the next node’s distance and the edge weight equals the current node’s distance, that edge is part of a shortest path and is stored for removal.
+
+3. ** Almost Shortest Path **
+Through reverse BFS, we can identify all edges that belong to one or more shortest paths.
+Instead of directly deleting these edges from the graph—which would be computationally expensive—I stored them in a set() and, during Dijkstra’s algorithm, skipped edges where (V1, V2) was in that set.
+
+
+##코드 설명 Code
+
+```python
+import heapq
+from collections import deque
+INF = float("inf")
+
+# 최단경로 탐색 다익스트라
+# deleted_path를 통해 사용 불가능한 경로 제외
+def dijkstra(start, end, graph, N, deleted_path):
+  distance = [INF] * N
+  distance[start] = 0
+  pq = []
+  heapq.heappush(pq, (0, start))
+
+  while pq:
+    weight, current = heapq.heappop(pq)
+    if distance[current] < weight:
+      continue
+    for nxt, w in graph[current]:
+      if (current, nxt) in deleted_path:
+        continue
+      new_weight = weight + w
+      if new_weight < distance[nxt]:
+        distance[nxt] = new_weight
+        heapq.heappush(pq, (new_weight, nxt))
+  return distance
+
+# 최단경로 역추적 너비우선탐색
+def bfs(start):
+  visited = [False] * N
+  queue = deque([start])
+  deleted = set()
+  while queue:
+    current = queue.popleft()
+    for nxt, w in reversed_graph[current]:
+      if dist[nxt] + w == dist[current]:
+        if not visited[nxt]:
+          visited[nxt] = True
+          queue.append(nxt)
+        deleted.add((nxt, current))
+  return deleted
+
+while True:
+  N, M = map(int, input().split())
+
+  # 종료 조건
+  if N == 0 and M == 0:
+    break
+  graph = { i : [] for i in range(N)}
+  reversed_graph = { i : [] for i in range(N)}
+
+  start, end = map(int, input().split())
+  if start == 0 and end == 0:
+    break
+  for _ in range(M):
+    U, V, P = map(int, input().split())
+    graph[U].append((V, P))
+    reversed_graph[V].append((U, P))
+
+  # 최단 경로 탐색
+  dist = dijkstra(start, end, graph, N, set())
+  # 최단 경로 역추적
+  deleted_path = bfs(end)
+  # 사용가능한 경로로 이루어진 최단 경로 탐색
+  result = dijkstra(start, end, graph, N, deleted_path)
+
+  # 거의 최단 경로 존재 여부에 따라 출력
+  if result[end] == INF:
+    print(-1)
+  else:
+    print(result[end])
+
+
+
+## 예시 입력 Sample Input
+7 9
+0 6
+0 1 1
+0 2 1
+0 3 2
+0 4 3
+1 5 2
+2 6 4
+3 6 2
+4 6 4
+5 6 1
+4 6
+0 2
+0 1 1
+1 2 1
+1 3 1
+3 2 1
+2 0 3
+3 0 2
+6 8
+0 1
+0 1 1
+0 2 2
+0 3 3
+2 5 3
+3 4 2
+4 1 1
+5 1 1
+3 0 1
+0 0
+
+## 예시 출력 Sample Output
+5
+-1
+6
+
+
+## 마무리 Conclusion or Reflection
+정답률 20% 남짓의 문제라 어려울줄 알았지만 생각하는 대로 오타없이 코딩이 가능하기만 하다면 정말 쉬운 문제였다.
+처음에 거의 최단 경로를 "최단 경로의 모든 간선을 제외한"이 아닌 "최단 경로가 아닌"으로 이해해서 조금 헤맸다.
+비슷한 방법으로 풀 수 있지만 사이클과 역방향 그래프를 이용한 숫자 계산값에 대한 로직이 몇개 더 추가되었어야 했다.
+
+Although the problem had a low correct-answer rate (around 20%), it turned out to be quite simple—so long as the logic was properly understood and there were no typos during coding.
+At first, I misunderstood the definition of the almost shortest path as “a path that is not the shortest path” instead of “a path composed of no edges from any shortest path.”
+The two approaches are similar, but the first requires additional logic involving cycles and reverse-graph distance checks.

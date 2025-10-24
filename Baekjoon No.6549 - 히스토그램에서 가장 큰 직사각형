@@ -1,0 +1,89 @@
+# Baekjoon No.6549 - 히스토그램에서 가장 큰 직사각형
+- [문제 링크](https://www.acmicpc.net/problem/6549)
+
+
+## 문제 설명 Problem Description
+히스토그램에서 가장 넓이가 큰 직사각형을 구하는 프로그램을 작성하시오.
+입력은 테스트 케이스 여러 개로 이루어져 있다. 각 테스트 케이스는 한 줄로 이루어져 있고, 직사각형의 수 n이 가장 처음으로 주어진다.
+ (1 ≤ n ≤ 100,000) 그 다음 n개의 정수 h1, ..., hn (0 ≤ hi ≤ 1,000,000,000)가 주어진다. 이 숫자들은 히스토그램에 있는 직사각형의 높이이며, 왼쪽부터 오른쪽까지 순서대로 주어진다.
+ 모든 직사각형의 너비는 1이고, 입력의 마지막 줄에는 0이 하나 주어진다.
+각 테스트 케이스에 대해서, 히스토그램에서 가장 넓이가 큰 직사각형의 넓이를 출력한다.
+
+Write a program to find the largest rectangular area in a histogram.
+Each test case consists of a single line.
+The first number n represents the number of rectangles (1 ≤ n ≤ 100,000).
+It is followed by n integers h₁, h₂, ..., hₙ (0 ≤ hᵢ ≤ 1,000,000,000),
+which represent the heights of the rectangles in the histogram from left to right.
+All rectangles have a width of 1.
+The input contains multiple test cases.
+The last line contains a single zero (0), which indicates the end of input.
+For each test case, print the maximum rectangular area that can be formed in the histogram.
+
+
+## 생각 과정 Thought Process
+1. ** 스택 **
+일단 차례대로 숫자들을 살펴 내려간다고 생각하면 그 숫자가 더이상 쓸수 없는 숫자인지 아닌지를 판단할수 있다.
+현재 수들의 집합의 양옆이 작아지면 그 수들은 사용할 수 없다.
+사용 할 수 없는 수들을 pop()하는 조건으로 스택 자료구조를 사용하기에 적합했다.
+
+2. ** 알고리즘 **
+너비를 인덱스로 계산하므로 스택에 높이값을 저장하는 것은 이용할 수 없었다.
+너비가 2이상일 경우에 스택에서 pop()되면서 그 너비가 가능 한 한 가장 크게 업데이트 되도록 했다.
+for 루프에서 data의 마지막 입력값이 가장 작을 때 외에는 stack 안의 내용이 존재하므로 마지막에 while 문으로 처리해 주었다.
+
+
+1. ** Stack **
+As I went through the numbers in order, I realized that I could determine whether each number could still be used or not.
+When the values on both sides of a number become smaller, that number can no longer be used.
+Since the condition for removing unusable numbers naturally fits the stack structure, I used a stack to manage them efficiently.
+
+2. ** Algorithm **
+Because the width is calculated using indices, it was not practical to store height values directly in the stack.
+When the width exceeded 2, I updated the maximum possible area each time a value was popped from the stack.
+Except when the last value in the data array was the smallest,
+there were always remaining values in the stack after the for loop, so I handled them afterward with a while loop.
+
+
+##코드 설명 Code
+
+```python
+while True:
+  data = list(map(int, input().split()))
+  N = data[0]
+  # 종료 조건
+  if N == 0:
+    break
+  numbers = data[1:]
+
+  stack = []
+  result = 0
+  for i in range(N):
+    # 현재 수가 가장 스택의 가장 마지막에 추가된 숫자보다 작을 때 계산 시작
+    while stack and numbers[stack[-1]] > numbers[i]:
+      height = numbers[stack.pop()]                     # 현재 계산하는 높이
+      width = i if not stack else i - stack[-1] - 1     # 인덱스 기반으로 가능한 너비 계산
+      result = max(result, height * width)              # 높이와 너비로 max()계산
+    stack.append(i)
+
+  # 스택 나머지 정리 (위의 i = N)
+  while stack:
+    height = numbers[stack.pop()]
+    width = N if not stack else N - stack[-1] - 1
+    result = max(result, height * width)
+
+  print(result)
+
+
+## 예시 입력 Sample Input
+4 1000 1000 1000 1000
+0
+
+## 예시 출력 Sample Output
+4000
+
+## 마무리 Conclusion or Reflection
+코드는 짧고 stack의 자료구조를 떠올리는 것은 어렵지 않았지만 그 스택을 이용해 어떤 알고리즘을 설계해야 하는가가 관건이었다.
+어떤 사람들은 세그먼트 트리를 사용하는 사람들도 있었으나 이 방법은 직관적이지는 못해보였다.
+
+The code itself was short, and the idea of using a stack wasn’t difficult, but the real challenge lay in designing the algorithm around that stack.
+Some people used a segment tree for this problem, but that approach seemed less intuitive to me.

@@ -1,0 +1,117 @@
+# Baekjoon No.7578 - 공장
+- [문제 링크](https://www.acmicpc.net/problem/7578)
+
+
+## 문제 설명 Problem Description
+또한, 각 기계에는 식별번호가 붙어있으며, 짝이 맺어진 기계끼리는 같은 식별번호가 붙어있다. 즉, 각 열에 있는 N개의 기계끼리는 서로 다른 식별번호를 가지고 있으며, 반대쪽 열에 있는 같은 식별번호를 가진 기계와 케이블로 이어져 있다.
+공장 작업의 효율성을 위해 기계들은 짝을 맺은 순서대로 배치되지 않으며, 필요에 따라 각 열의 기계들의 순서를 바꾼 바람에 케이블은 마구 엉켜있는 상태이다.
+정수 N과 A열에 위치한 기계, B열에 위치한 기계의 식별번호가 각각 순서대로 주어질 때에 서로 교차하는 케이블 쌍의 개수를 정확하게 세어 출력하는 프로그램을 작성하시오.
+입력은 세 줄로 이루어져 있다. 첫 줄에는 정수 N이 주어지며, 두 번째 줄에는 A열에 위치한 N개 기계의 서로 다른 식별번호가 순서대로 공백문자로 구분되어 주어진다.
+세 번째 줄에는 B열에 위치한 N개의 기계의 식별번호가 순서대로 공백문자로 구분되어 주어진다.
+단, 1 ≤ N ≤ 500,000이며, 기계의 식별번호는 모두 0 이상 1,000,000 이하의 정수로 주어진다.
+여러분은 읽어 들인 2N개의 기계의 배치로부터 서로 교차하는 케이블 쌍의 개수를 정수 형태로 한 줄에 출력해야 한다.
+
+The input consists of three lines:
+The first line contains the integer N.
+The second line contains N distinct integers representing the IDs of the machines in column A, in order.
+The third line contains N integers representing the IDs of the machines in column B, in order.
+1 ≤ N ≤ 500,000
+Each machine ID is an integer between 0 and 1,000,000 (inclusive).
+Your program should read the arrangement of the 2N machines and output a single integer —
+the number of pairs of cables that cross each other.
+
+
+## 생각 과정 Thought Process
+1. ** 매핑 **
+문제를 풀고자 했을 때 가장 쉽게 접근 하려면 일단 수를 정제하는 과정을 거쳐 매핑하는것이 우선순위라고 보았다.
+A열을 1, 2, 3, ... , N 으로 만든 후 B열을 A열의 수에 맞춰 나열 했다.
+
+2. ** 세그먼트 트리 **
+매핑 후 많은 방법을 시도 해 보다가 도무지 방법을 찾지 못해 힌트를 보았는데 세그먼트 트리를 사용해야 한다고 하여 방법을 생각해보았다.
+세그먼트 트리는 구하고자 하는 범위의 누적된 값을 쉽게 찾을 수 있다.
+매핑된 A열과 B열을 보며 줄을 하나씩 이어보았는데 지금 까지 등장했던 수 중의 역전된 쌍의 개수 만큼 구해야 하는 점의 개수가 추가됐다.
+그래서 0으로 모두 초기화된 세그먼트 트리로 그 범위의 등장 한 수의 개수를 저장하였다.
+
+3. ** 쿼리 **
+쿼리는 세그먼트 트리를 이용하여 그 등장한 수보다 큰 [등장한수 + 1, N] 의 범위의 누적합을 결과값에 누적하여 더했다.
+
+1. ** Mapping **
+When I first approached the problem, I realized that the easiest way to start was by refining and mapping the data.
+I replaced the IDs in column A with 1, 2, 3, ..., N, and then rearranged the IDs in column B according to the order of the corresponding IDs in column A.
+
+2. ** Segment Tree **
+After mapping, I tried many different approaches but couldn’t find a clear solution, so I looked at a hint that suggested using a segment tree.
+A segment tree makes it easy to find cumulative values over a specific range.
+By drawing the connections between the mapped columns A and B, I noticed that the number of intersections corresponded to the number of inversions among the values that had already appeared.
+Therefore, I initialized a segment tree with all zeros and used it to store the count of each number that had appeared in the given range.
+
+3. ** Query **
+Using the segment tree, each query calculated the cumulative sum of the numbers greater than the current number—specifically, the sum over the range [current_number + 1, N]—and accumulated it in the final result.
+
+
+##코드 설명 Code
+
+```python
+# 현재 수를 등장한 수로 트리에 저장
+def update(tree, node, start, end, idx):
+  if start > idx or end < idx:
+    return
+  tree[node] += 1
+  if start != end:
+    mid = (start + end) // 2
+    update(tree, node * 2, start, mid, idx)
+    update(tree, node * 2 + 1, mid + 1, end, idx)
+
+# 현재 수 보다 큰 수의 개수를 구함(등장했던 수중의 역전쌍)
+def quary(tree, node, start, end, left, right):
+  if start > right or end < left:
+    return 0
+  if left <= start and right >= end:
+    return tree[node]
+  mid = (start + end) // 2
+  return quary(tree, node * 2, start, mid, left, right) + quary(tree, node * 2 + 1, mid + 1, end, left, right)
+
+N = int(input())
+idx_dict = {}
+# 입력 및 매핑
+data_1 = list(map(int, input().split()))
+data_2 = list(map(int, input().split()))
+for i in range(N):
+  idx_dict[data_1[i]] = i + 1
+
+numbers_1 = list(range(1, N + 1))
+numbers_2 = [0] * N
+
+for i in range(N):
+  number = data_2[i]
+  idx = idx_dict[number]
+  numbers_2[i] = idx
+
+tree = [0] * (N * 4)
+
+result = 0
+for data in numbers_2:
+  result += quary(tree, 1, 1, N, data + 1, N)   # 등장했던 수 중에서 data 보다 높은 수의 개수를 구함
+  update(tree, 1, 1, N, data)   # data 등장 처리
+print(result)
+
+
+## 예시 입력 Sample Input
+5
+132 392 311 351 231
+392 351 132 311 231
+
+## 예시 출력 Sample Output
+3
+
+
+## 마무리 Conclusion or Reflection
+솔직히 이 문제에서 세그먼트 트리를 사용해야 되는지는 생각도 하지 못했다.
+그저 리스트를 이용하여 특별한 로직을 생각했을 뿐 이었으나 줄을 하나씩 그어보며 교차하는 점을 유심히 살펴보며 세그먼트 트리와 결합해내어 로직을 생각해 내었다.
+지금까지 세그먼트 트리를 써야 한다고 광고하는 문제만 풀어보아서 그런지 세그먼트 트리에 대한 조금더 유연한 사고가 필요하다고 생각했다.
+
+To be honest, I never imagined that a segment tree would be necessary for this problem.
+At first, I only tried to solve it using lists and a special logic of my own. However, by carefully observing the crossing lines one by one,
+I managed to combine the concept with a segment tree and came up with a working solution.
+Until now, I had only solved problems that explicitly told me to use a segment tree,
+so this experience made me realize the importance of thinking about segment trees in a more flexible way.

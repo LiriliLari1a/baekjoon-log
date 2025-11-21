@@ -1,0 +1,163 @@
+# Baekjoon No.11438 - LCA 2
+- [문제 링크](https://www.acmicpc.net/problem/11438)
+
+
+## 문제 설명 Problem Description
+N(2 ≤ N ≤ 100,000)개의 정점으로 이루어진 트리가 주어진다. 트리의 각 정점은 1번부터 N번까지 번호가 매겨져 있으며, 루트는 1번이다.
+두 노드의 쌍 M(1 ≤ M ≤ 100,000)개가 주어졌을 때, 두 노드의 가장 가까운 공통 조상이 몇 번인지 출력한다.
+첫째 줄에 노드의 개수 N이 주어지고, 다음 N-1개 줄에는 트리 상에서 연결된 두 정점이 주어진다.
+그 다음 줄에는 가장 가까운 공통 조상을 알고싶은 쌍의 개수 M이 주어지고, 다음 M개 줄에는 정점 쌍이 주어진다.
+M개의 줄에 차례대로 입력받은 두 정점의 가장 가까운 공통 조상을 출력한다.
+
+You are given a tree with N nodes (2 ≤ N ≤ 100,000).
+Each node is numbered from 1 to N, and the root of the tree is node 1.
+You will also receive M pairs of nodes (1 ≤ M ≤ 100,000).
+For each pair, you must output the Lowest Common Ancestor (LCA) of the two nodes.
+The first line contains the number of nodes N.
+The next N−1 lines each contain two integers, representing two nodes that are connected in the tree.
+The next line contains the number of queries M.
+The following M lines each contain two integers u v, representing a pair of nodes.
+For each of the M queries, print the LCA of u and v.
+
+
+## 생각 과정 Thought Process
+1. ** 조상배열 **
+최소 공통 조상을 찾기 위해선 그냥 트리에서 함께 올라가는 방법(O(N)) 말고 다른 더 최적화된 방법이 필요했다.
+이를 최적화 하기 위하여 2^n 의 조상을 저장해놓은 2차원 배열을 사용했다.
+너비우선탐색을 이용하여 각노드의 부모노드와 깊이를 반환했고 점화식을 세워 배열을 완성했다.
+
+2. ** LCA **
+이제 두개의 노드가 들어오면 들어온 노드의 깊이를 lifting()으로 맞췄다.
+서로 깊이를 맞추는 과정에서 깊이 차이를 비트 연산을 이용한 점프로 빠르게 해결했다.
+마지막으로 큰 점프부터 작은 점프순으로 최소공통조상까지 찾도록 했다.
+
+1. ** Ancestor Table **
+To find the Lowest Common Ancestor efficiently, I needed a better method than simply climbing up the tree together, which takes O(N).
+For optimization, I used a 2D table that stores the 2^k-th ancestor for each node.
+Using BFS, I extracted each node’s parent and depth, and then filled the ancestor table based on the recurrence relation.
+
+2. ** LCA **
+When two nodes are given, I first align their depths using the lifting() function.
+During the depth-alignment process, I used bit operations to jump upward quickly according to the depth difference.
+Finally, I searched for the LCA by checking from the largest jump down to the smalle
+
+
+##코드 설명 Code
+
+```python
+from collections import deque
+
+# 너비우선탐색으로 각 노드의 부모노드와 깊이를 반환
+def BFS(graph, start = 1):
+  parent = [0] * (N + 1)
+  depth = [0] * (N + 1)
+  depth[start] = 1
+  queue = deque([start])
+  visited = [False] * (N + 1)
+  visited[start] = True
+  while queue:
+    current = queue.popleft()
+    for nxt in graph[current]:
+      if visited[nxt]:
+        continue
+      parent[nxt] = current
+      depth[nxt] = depth[current] + 1
+      visited[nxt] = True
+      queue.append(nxt)
+  return parent, depth
+
+# 두개의 노드의 깊이를 맞춤
+def lifting(node, diff, exp_scale, LOG):
+  bit = 0
+  while diff:
+    if diff & 1:
+      node = exp_scale[bit][node]
+      if node == 0:
+        return node
+    diff = diff >> 1
+    bit += 1
+  return node
+
+# 최소 공통 조상 노드를 반환
+def lca(u, v, depth, exp_scale, LOG):
+  if depth[u] < depth[v]:
+    u, v = v, u
+  u = lifting(u, depth[u] - depth[v], exp_scale, LOG)
+  if u == v:
+    return u
+  for i in range(LOG - 1, -1, -1):
+    if exp_scale[i][u] != exp_scale[i][v]:
+      u = exp_scale[i][u]
+      v = exp_scale[i][v]
+  return exp_scale[0][u]
+
+N = int(input())
+LOG = (N).bit_length()
+
+graph = { i : [] for i in range(1, N + 1) }
+# 양방향 그래프 빌드
+for _ in range(N - 1):
+  u, v = map(int, input().split())
+  graph[u].append(v)
+  graph[v].append(u)
+parent, depth = BFS(graph)
+
+# 부모노드를 비트 점프하는 리스트
+exp_scale = [[0] * (N + 1) for _ in range(LOG)]
+for i in range(1, N + 1):
+  exp_scale[0][i] = parent[i]
+
+for i in range(1, LOG):
+  for j in range(1, N + 1):
+    ancestor = exp_scale[i - 1][j]  # j의 2^(i-1)번째 조상
+    exp_scale[i][j] = exp_scale[i - 1][ancestor]   # ancestor의 2^(i-1)번째 조상을 j의 2^i번째 조상에 저장
+                                                   # 즉 j의 2^(i-1) + 2^(i-1)번째 조상인 2^i번째 조상을 저장
+M = int(input())
+for _ in range(M):
+  a, b = map(int, input().split())
+  print(lca(a, b, depth, exp_scale, LOG))
+
+
+## 예시 입력 Sample Input
+15
+1 2
+1 3
+2 4
+3 7
+6 2
+3 8
+4 9
+2 5
+5 11
+7 13
+10 4
+11 15
+12 5
+14 7
+6
+6 11
+10 9
+2 6
+7 6
+8 13
+8 15
+
+## 예시 출력 Sample Output
+2
+4
+2
+1
+3
+1
+
+
+## 마무리 Conclusion or Reflection
+개인적으로 조금 어려운 문제였다.
+비트연산도 익숙하지 않았고 로그스케일로 이동시키는 것도 이해하는데에 조금 시간이 걸렸다.
+많은 함수들이 단계적으로 이 문제를 처리했는데 처음에는 감도 안잡혀 다른 코드를 참고했다.
+그래도 어디선가 풀어본 문제 같아서 그 익숙함 덕분에 그나마 어렵지 않게 공부한 것 같다.
+
+Personally, this problem was a bit challenging.
+I wasn’t very familiar with bit operations, and understanding the logarithmic-scale jumps also took me some time.
+There were many steps and helper functions involved, so at first I couldn’t get a clear grasp and had to refer to other code.
+Still, it felt like a problem I had seen before, so that familiarity helped make the learning process a bit easier.

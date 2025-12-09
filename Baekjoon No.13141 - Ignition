@@ -1,0 +1,138 @@
+# Baekjoon No.13141 - Ignition
+- [문제 링크](https://www.acmicpc.net/problem/13141)
+
+
+## 문제 설명 Problem Description
+그래프의 정점 (위 그림에서 동그라미로 표시된 곳) 중 한 곳에 불을 붙일 수 있다.
+정점에 불이 붙으면 곧바로 노드와 연결된 간선을 따라서 불이 전달된다.
+간선 위에서는 불은 1초당 1만큼의 거리를 이동한다. 만약 어떤 간선의 양 끝 정점에 불이 붙은 경우 불은 간선의 중앙까지 태운 후 꺼진다.
+그래프를 최대한 빠른 시간 안에 전부 태우고 싶어한다.
+어떤 정점에 불을 붙일지 구하는 프로그램을 작성하여라. 단, 위 그림에서 간선끼리 교차하는 것은 무시한다.
+
+첫 번째 줄에는 그래프의 정점의 수 N과 간선의 수 M이 주어진다. (2 ≤ N ≤ 200, N-1 ≤ M ≤ 20,000)
+두 번째 줄부터 M개의 줄에는 각 간선의 시작점 S, 끝점 E, 길이 L이 주어진다. (1 ≤ L ≤ 100)
+시작점과 끝점이 같은 간선도 있을 수 있으며, 특정 두 정점을 직접 연결하는 간선의 수가 여러 개일 수 있다.
+또한, 그래프의 모든 정점들은 간선들을 통해서 연결되어 있다. 주어진 그래프를 모두 태우는 데 걸리는 최소 시간을 출력한다.
+답은 소수점 아래 한 자리까지 출력한다. 문제의 특성 상 오차가 생길 일이 없으므로 출력 데이터와 정확히 일치해야 정답으로 처리한다.
+
+You may ignite the fire at one of the graph’s vertices (the round circles in the picture).
+Once a vertex catches fire, the flames immediately begin spreading along all edges connected to it.
+On edges, the fire moves at a speed of 1 unit of distance per second.
+If the ends of an edge both catch fire,
+then the two fires burn toward each other and the edge is completely burned when the flames meet in the middle of the edge; after meeting, the fire on that edge goes out.
+You want to burn the entire graph in the minimum possible time.
+Write a program that determines which vertex should be ignited in order to minimize the total time needed to burn the entire graph.
+Note: crossing edges in the diagram (geometric crossing) should be ignored—only the graph connectivity matters.
+
+The first line contains two integers N and M, the number of vertices and edges, respectively.(2 ≤ N ≤ 200, N − 1 ≤ M ≤ 20,000)
+Each of the next M lines contains three integers:
+S: start vertex / E: end vertex / L: length of the edge (1 ≤ L ≤ 100)
+Self-loops (edges where S = E) may appear, and multiple edges between the same pair of vertices may also appear.
+The entire graph is guaranteed to be connected.
+Print the minimum time required to burn the entire graph if you choose the best possible starting vertex.
+The result must be printed with exactly one digit after the decimal point.
+Due to the nature of the problem, no floating-point precision issues will occur, so your output must match the correct answer exactly.
+
+
+## 생각 과정 Thought Process
+1. ** 최단거리 **
+이문제를 최적화 하기 위해 최단거리를 이용해 임의의 정점에서 각 정점에 도달하는 최소 소요시간을 구해야한다.
+이를 위해 플로이드-워셜 알고리즘을 활용했다.
+
+2. ** 간선이 타는 시간 **
+간선의 타는 시간은 각 정점에 도달하는 지연시간과 길이에 따라 일차함수로 나타낼 수 있다.
+(두 점의 공통 지연시간) + (간선의 길이 + 두 점의 지연시간 차이) / 2 이다.
+
+3. ** 브루트포스 **
+임의의 정점에서 시작하여 가장 늦게 타는 간선의 소요시간을 구한다.
+가장 늦게 탄 간선의 소요시간이 해당 정점의 걸리는 시간이 된다.
+모든 정점에서 시행한 뒤 가장 작은 값을 출력한다.
+
+1. ** Shortest Path **
+To optimize this problem, we need to calculate the minimum time required to reach every vertex from an arbitrary starting vertex.
+For this, I used the Floyd–Warshall algorithm.
+
+2. ** Edge Burning Time **
+The time it takes for an edge to burn can be expressed as a linear function based on the delay times of its endpoints and the edge length.
+It is calculated as:
+(common delay of the two vertices) + (edge length + difference in delay times) / 2.
+
+3. ** Brute Force **
+For each vertex, I simulate the burning process and find the latest-burning edge.
+The time when the last edge burns becomes the total burning time for that vertex.
+After running this for every vertex, I output the smallest value.
+
+
+##코드 설명 Code
+
+```python
+# 오름차순 정렬
+def swap(a, b):
+  if a > b:
+    return b, a
+  return a, b
+
+# 정점 s, e의 도달시간과 길이에 따른 간선 태우는 시간 구하기
+def time(s_time, e_time, length):
+  s_time, e_time = swap(s_time, e_time)
+  diff = e_time - s_time
+  return s_time + (length + diff) / 2
+
+N, M = map(int, input().split())
+graph = { i : [] for i in range(1, N + 1) }
+distance = [[float('inf')] * (N + 1) for _ in range(N + 1)]
+lines = []
+
+
+for _ in range(M):
+  S, E, L = map(int, input().split())
+  S, E = swap(S, E)
+  lines.append((S, E, L))
+  distance[S][E] = min(distance[S][E], L)
+  distance[E][S] = min(distance[E][S], L)
+
+# 두정점이 같은 간선 거리 조정
+for i in range(1, N + 1):
+  distance[i][i] = 0
+
+# 플로이드-워셜 알고리즘 최단거리 구하기
+for k in range(1, N + 1):
+  for i in range(1, N + 1):
+    for j in range(1, N  + 1):
+      distance[i][j] = min(distance[i][j], distance[i][k] + distance[k][j])
+
+results = []
+# init에 불을 붙인다고 가정
+# 가장 높은 소요시간중 가장 낮은 소요시간 출력
+for init in range(1, N + 1):
+  times = []
+  for s, e, l in lines:
+    times.append(time(distance[init][s], distance[init][e], l))
+  results.append(max(times))
+print(f"{min(results):.1f}")
+
+
+## 예시 입력 Sample Input
+5 10
+1 2 1
+2 3 1
+3 4 1
+4 5 1
+1 3 10
+2 4 10
+3 5 10
+1 4 7
+2 5 7
+1 5 9
+
+## 예시 출력 Sample Output
+6.5
+
+## 마무리 Conclusion or Reflection
+이 문제를 푸는데에 조금 시간이 걸렸다. 너무 어렵게 생각한 탓인지 코드가 산으로 가서 몇번 지웠다.
+직관적으로 보니 생각보다 짧은 코드로도 풀렸다.
+
+
+It took me quite some time to solve this problem. I think I overcomplicated it,
+and my code went off track multiple times, so I had to rewrite it more than once.
+Once I approached it more intuitively, I realized that the solution could be implemented with surprisingly concise code.

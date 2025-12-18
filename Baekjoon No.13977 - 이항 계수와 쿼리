@@ -1,0 +1,85 @@
+# Baekjoon No.13977 - 이항 계수와 쿼리
+- [문제 링크](https://www.acmicpc.net/problem/13977)
+
+
+## 문제 설명 Problem Description
+M개의 자연수 N과 정수 K가 주어졌을 때 이항 계수 (N ,K)를 1,000,000,007로 나눈 나머지를 구하는 프로그램을 작성하시오.
+첫째 줄에 M이 주어진다. (1 ≤ M ≤ 100,000)
+둘째 줄부터 M개의 줄에 N과 K가 주어진다. (1 ≤ N ≤ 4,000,000, 0 ≤ K ≤ N)
+M개의 줄에 이항계수 (N,K) 를 1,000,000,007로 나눈 나머지를 출력한다.
+
+Given M pairs of natural numbers N and integers K, compute the binomial coefficient (N, K) modulo 1,000,000,007.
+The first line contains an integer M (1 ≤ M ≤ 100,000).
+Each of the next M lines contains two integers N and K (1 ≤ N ≤ 4,000,000, 0 ≤ K ≤ N).
+Print M lines.
+Each line should contain the value of the binomial coefficient (N, K) modulo 1,000,000,007.
+
+
+## 생각 과정 Thought Process
+1. ** 이항계수 **
+이항계수는 조합의 경우의 수의 값과 같다.
+이항계수를 구하기 위해서는 최대 N! 까지 계산해야 하는데 다루기에 너무 큰 수이다.
+이 숫자를 줄이고 간편화 하기위해 식을 여러번 써내렸지만 일반적으로 해결하기엔 어려웠다.
+
+2. ** 페르마 소정리 **
+페르마 소정리에 해답이 있다하여 공부하여보았다.
+페르마의 소정리는 임의의 소수 p에 대해 p와 서로소인 x에 대해 1 = x^(p-1)/p (mod p) 라는 것이다.
+이항계수에 바로 이를 적용하기엔 모듈러 연산은 나눗셈을 지원하지 않으므로 나눗셈을 제거하는 방향으로 쿼리를 짜야한다.
+양변에 x^(-1)을 곱해 임의의 수 x의 첫 역원을 정의하고 쿼리이므로 팩토리얼, 역원 값을 리스트로 미리 저장해놓았다.
+리스트로 저장되는 각 값은 팩토리얼의 정의에 근거한 연산으로 계산된 기초적인 값들이다.
+
+1. ** Binomial Coefficient **
+The binomial coefficient represents the number of cases in a combination.
+To compute it directly, we would need to calculate values up to N!, which becomes extremely large and difficult to handle.
+I tried to simplify the expression by rewriting the formula multiple times, but solving it in a general way was not straightforward.
+
+2. ** Fermat’s Little Theorem **
+While studying the problem, I learned that Fermat’s Little Theorem provides the key idea.
+The theorem states that for a prime number p and an integer x that is coprime to p,
+x^(p−1) ≡ 1 (mod p).
+##코드 설명 Code
+
+```python
+MOD = 1_000_000_007
+MAX = 4_000_000   # (N, K <= 4,000,000)
+
+fact = [1, 1]   # (0!, 1!)
+for i in range(2, MAX + 1):
+  fact.append(fact[-1] * i % MOD)
+
+# 팩토리얼의 역원
+inv = [1] * (MAX + 1)
+inv[-1] = pow(fact[-1], MOD - 2, MOD)
+for i in range(MAX, 0, -1):
+  inv[i - 1] = inv[i] * i % MOD
+
+M = int(input())
+
+# MOD 연산은 나눗셈 적용이 되지 않으므로 역원을 곱하여 결과를 구함
+for _ in range(M):
+  N, K = map(int, input().split())
+  result = fact[N] * inv[K] % MOD * inv[N - K] % MOD
+  print(result)
+
+
+## 예시 입력 Sample Input
+5
+5 2
+5 3
+10 5
+20 10
+10 0
+
+## 예시 출력 Sample Output
+10
+10
+252
+184756
+1
+
+## 마무리 Conclusion or Reflection
+이렇게 수학적으로 접근한 문제는 오랜만이었다.
+모듈러 연산에 나눗셈이 적용될 수 없다는 한계와 역원을 이용한 계산을 배웠다.
+
+It had been a long time since I approached a problem from a mathematical perspective like this.
+Through this problem, I learned about the limitation that division cannot be directly applied in modular arithmetic, and how modular inverses can be used to overcome this issue.

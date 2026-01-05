@@ -1,0 +1,81 @@
+# Baekjoon No.14517 - 팰린드롬 개수 구하기(Large)
+- [문제 링크](https://www.acmicpc.net/problem/14517)
+
+
+## 문제 설명 Problem Description
+주어진 문자열의 부분수열 중 팰린드롬이 되는 부분수열의 개수를 알고싶어한다. (공집합은 포함하지 않는다)
+예를들어 'abb' 의 부분수열은 {'a'}, {'b'}, {'b'}, {'ab'}, {'ab'}, {'bb'}, {'abb'} 이고 이 가운데 팰린드롬은 {'a'}, {'b'}, {'b'}, {'bb'} 으로 4개 이다.
+문자열이 주어졌을 때, 팰린드롬이 되는 부분수열의 개수를 출력하는 프로그램을 작성하시오.
+첫째 줄에 길이가 1000을 넘지 않는 문자열 S 가 주어진다. 문자열 S는 알파벳 소문자로만 이루어져 있다.
+주어진 문자열 S 의 부분수열 중 팰린드롬이 되는 부분수열의 개수를 10,007 로 나눈 나머지를 출력한다.
+
+You want to find the number of subsequences of a given string that are palindromes. (The empty subsequence is not included.)
+For example, the subsequences of the string "abb" are {"a"}, {"b"}, {"b"}, {"ab"}, {"ab"}, {"bb"}, {"abb"}, and among these, the palindromic subsequences are {"a"}, {"b"}, {"b"}, {"bb"}, so the answer is 4.
+Given a string, write a program that outputs the number of subsequences that are palindromes.
+On the first line, a string S of length at most 1000 is given. The string S consists only of lowercase English letters.
+Output the number of palindromic subsequences of the given string S modulo 10,007.
+
+
+## 생각 과정 Thought Process
+1. ** 팰린드롬 여부 **
+처음에는 팰린드롬 여부를 확인하는 2차원 bool 배열을 활용해 특정한 식을 세워 풀어볼 예정이었다.
+하지만 이정도 자료를 갖고 부분수열의 팰린드롬 개수를 셀 수 없으므로 실패했다.
+
+2. ** 팰린드롬 개수 **
+팰린드롬 여부 대신 2차원 int 배열을 통해 동적계획법으로 임의의 구간에서 만족하는 팰린드롬 부분수열의 개수를 추적하기로 했다.
+임의의 범위의 수에서 등장할수 있는 팰린드롬 부분수열의 개수를 저장하도록 동적계획법으로 설계하였다.
+
+1. ** Palindrome Check **
+At first, I planned to solve the problem by setting up a formula using a two-dimensional boolean array to check whether a given range forms a palindrome.
+However, with only this information, it is not possible to count the number of palindromic subsequences, so this approach failed.
+
+2. ** Counting Palindromes **
+Instead of checking only whether a range is a palindrome,
+I decided to use dynamic programming with a two-dimensional integer array to track the number of palindromic subsequences within an arbitrary interval.
+The DP was designed to store, for each range, the number of palindromic subsequences that can appear in that range.
+
+
+##코드 설명 Code
+
+```python
+MOD = 10_007
+
+S = input()
+n = len(S)
+
+dp = [[0] * n for _ in range(n)]
+
+# i 부터 i 까지의 팰린드롬은 1개
+for i in range(n):
+  dp[i][i] = 1
+
+for length in range(2, n + 1):
+  for l in range(n - length + 1):
+    r = l + length - 1
+
+    if S[l] == S[r]:    # l번째 r번째가 같은 문자면 많은 팰린드롬 생성
+      dp[l][r] = dp[l + 1][r] + dp[l][r - 1] + 1
+    else:               # l번째 r번째가 다른 문자면 포함-배제원리로 팰린드롬 생성
+      dp[l][r] = dp[l + 1][r] + dp[l][r - 1] - dp[l + 1][r - 1]
+    dp[l][r] = (dp[l][r] + MOD) % MOD
+
+# 0부터 마지막 까지의 팰린드롬 부분수열
+print(dp[0][-1])
+
+
+## 예시 입력 Sample Input
+abcaca
+
+## 예시 출력 Sample Output
+20
+
+
+## 마무리 Conclusion or Reflection
+부분수열이라는 말을 불연속된 값을 포함하지 않음으로 잘못 이해해서 잘못된 코드 제출을 했다.
+불연속된 값을 포함하지 않는다면 아마 팰린드롬 여부 체크만으로도 풀릴수 있을것이라고 생각한다.
+팰린드롬 개수를 구하는 동적계획법의 구조가 단순하지만 l번째와 r번째의 문자가 같을시에 dp를 저장하는 방법에 대해서 많이 힘들었다.
+
+I initially misunderstood the term “subsequence” and thought it did not allow discontinuous characters, which led me to submit incorrect code.
+If only contiguous characters were allowed, I believe the problem could have been solved simply by checking whether each substring is a palindrome.
+Although the overall structure of the dynamic programming for counting palindromic subsequences is straightforward,
+I struggled a lot with how to update the DP values when the characters at positions l and r are the same.
